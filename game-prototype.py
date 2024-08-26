@@ -1,4 +1,4 @@
-#imports
+# imports
 import random
 
 # globals
