@@ -66,6 +66,12 @@ while rounds <= 20:
     # Printing position for development reasons, take away later, keep after round check to have the right number after passing go
     print('Position:', position)
 
+    # Positions with chances : 11, 22
+
+    # Positions with airports: 2,4,5 - 7,8,10 - 13,15,16 - 19,20,21
+
+    # Free parking at 12, nothing happens
+
     # Position checks with negative outcomes, tax & jail
     if position == 3 or position == 9:
         #income tax
