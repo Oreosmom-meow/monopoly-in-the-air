@@ -27,6 +27,8 @@ def dice_roll():
     return die
 
 #main
+username = input('Enter your name: ')
+
 while rounds <= 20:
     # Information
     print(f'{bcolors.BOLD}{bcolors.OKGREEN}Round:', rounds, f'{bcolors.ENDC}')
@@ -90,4 +92,9 @@ while rounds <= 20:
 if rounds > 20:
     print(f'{bcolors.BOLD}{bcolors.HEADER}You have won!', f'{bcolors.ENDC}')
     print(f'{bcolors.BOLD}{bcolors.OKCYAN}You ended the game with:', money, f'{bcolors.ENDC}')
+    # score calculation
+    score = round(money * 0.75) # + value of owned properties
+    print(f'{bcolors.BOLD}{bcolors.OKGREEN}Your score is:', score, f'{bcolors.ENDC}')
+    # check if SCORE > HIGHSCORES, if yes ADD USERNAME + SCORE TO SCOREBOARD AND REMOVE LOWEST SCORE
+    # if score is new highscore, print(f'{bcolors.BOLD}{bcolors.OKGREEN}{bcolors.UNDERLINE}HIGHSCORE' + f'{bcolors.ENDC}')
 
