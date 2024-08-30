@@ -7,6 +7,7 @@ money = 150
 jail = False
 rounds = 1
 counter = 0
+doubles = 0
 
 # colors used for printing, "stolen" from blender
 class bcolors:
@@ -20,11 +21,61 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-#functions
+# functions
 def dice_roll():
     die = random.randint(1, 6)
-    print('Dice roll:', die)
     return die
+# .game events
+def income_tax():
+    global money
+    money_before = money
+    money -= 50 + money * 0.25
+    print(f'{bcolors.BOLD}{bcolors.WARNING}Income tax!', f'You lost {money_before - money:.0f}', f'{bcolors.ENDC}')
+def luxury_tax():
+    global money
+    money_before = money
+    money -= 100 + money * 0.5
+    print(f'{bcolors.BOLD}{bcolors.WARNING}Luxury tax!', f'You lost {money_before - money:.0f}', f'{bcolors.ENDC}')
+def jail_event():
+    global money
+    global counter
+    global dice_roll_1
+    global dice_roll_2
+    global jail
+
+    choosing = True
+    print(f'{bcolors.BOLD}{bcolors.WARNING}You are in jail.', f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.WARNING}Type "1" to roll the dice and get doubles to get out. You have {3 - counter} rolls left until automatic release.', f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.WARNING}Type "2" to pay a fine of 200 to get out.', f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.WARNING}Type "3" to use a get out of jail free card to get out.', f'{bcolors.ENDC}')
+    while choosing == True:
+        choice = input('Enter your choice: ')
+        if choice == '':
+            print('Try again, use "1", "2", or "3" to choose.')
+        elif 1 > int(choice) < 3:
+            print('Try again, use "1", "2", or "3" to choose.')
+        else:
+            choosing = False
+    if choice == '1':
+        print(dice_roll_1, dice_roll_2)
+        if dice_roll_1 != dice_roll_2:
+            counter += 1
+        else:
+            print(f'{bcolors.BOLD}{bcolors.OKGREEN}{bcolors.UNDERLINE}You have been released.' + f'{bcolors.ENDC}')
+            jail = False
+    elif choice == '2':
+        money -= 200
+        jail = False
+    else:
+        print('Cheater option, card doesnt exist yet')
+        jail = False
+def salary():
+    global money
+    money_before = money
+    # will add in profit from owned properties
+    money += 200
+    print(f'{bcolors.BOLD}{bcolors.OKBLUE}Salary time!\nYou earned:', f'{money - money_before}','\nYou now have:', money, f'{bcolors.ENDC}')
+
 
 #main
 username = input('Enter your name: ')
@@ -32,68 +83,73 @@ username = input('Enter your name: ')
 while rounds <= 20:
     # Information
     print(f'{bcolors.BOLD}{bcolors.OKGREEN}Round:', rounds, f'{bcolors.ENDC}')
-    print(f'{bcolors.BOLD}{bcolors.OKCYAN}Money:', money, f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.OKCYAN}Money:', f'{money:.0f}', f'{bcolors.ENDC}\n')
 
     # Checks the user's money and declared bankruptcy
     if money <= 0:
         print(f'{bcolors.BOLD}{bcolors.FAIL}You are bankrupt! \nGAME OVER', f'{bcolors.ENDC}')
         break
 
-    # Prompts the user for input before proceeding
-    input('Roll the dice')
+    # Dice rolls pre-determined at the start of round
+    dice_roll_1 = dice_roll()
+    dice_roll_2 = dice_roll()
 
-    # Jail check & roll the dice
-    # Add punishment for jail - either have rounds go by while in jail or take money
-    if not jail:
-        position += dice_roll() + dice_roll()
-    elif counter < 3:
-        print(f'{bcolors.BOLD}{bcolors.WARNING}You are in jail.', f'{bcolors.ENDC}')
-        if dice_roll() != dice_roll():
-            counter += 1
+    # JAIL
+    if jail:
+        jail_event()
+
+    # PLAYER INPUT TO PROCEED
+    input(f'{bcolors.BOLD}Roll the dice to move.{bcolors.ENDC}')
+    print(f'{bcolors.OKBLUE}You rolled{bcolors.ENDC}:',f'{dice_roll_1}, {dice_roll_2}')
+
+    # POSITION CHANGE
+    # CHECKS FOR DOUBLES
+    if dice_roll_1 == dice_roll_2:
+        doubles += 1
+        if doubles >= 2:
+            print(f'{bcolors.BOLD}{bcolors.WARNING}You have been jailed for rolling doubles twice in a row.', f'{bcolors.ENDC}')
+            jail = True
+            doubles = 0
         else:
-            print(f'{bcolors.BOLD}{bcolors.OKGREEN}{bcolors.UNDERLINE}You have been released.' + f'{bcolors.ENDC}')
-            jail = False
+            position += dice_roll_1 + dice_roll_2
     else:
-        jail = False
-        print(f'{bcolors.BOLD}{bcolors.OKGREEN}{bcolors.UNDERLINE}You have been released.' + f'{bcolors.ENDC}')
+        doubles = 0
+        position += dice_roll_1 + dice_roll_2
 
-    # Position to check for the round and passing go
+    # ROUND COMPLETED, PASS GO AND COLLECT $200
     if position > 22:
-        # round counter
-        money += 200
-        print(f'{bcolors.BOLD}{bcolors.OKBLUE}Salary time! You have:', money, f'{bcolors.ENDC}')
+        salary()
+        # ROUND COUNTER
         rounds += 1
         position = position - 22
 
-    # Printing position for development reasons, take away later, keep after round check to have the right number after passing go
-    print('Position:', position)
+    # Currently prints position as number on the board, when database, turn into airport buying
+    print('You are at:', position)
+
 
     # Positions with chances : 11, 22
 
     # Positions with airports: 2,4,5 - 7,8,10 - 13,15,16 - 19,20,21
-
-    # Free parking at 12, nothing happens
+    # Free parking at 12, nothing happens - jail(location) at 17, nothing happens
 
     # Position checks with negative outcomes, tax & jail
     if position == 3 or position == 9:
-        #income tax
-        print(f'{bcolors.BOLD}{bcolors.WARNING}Income tax!', f'{bcolors.ENDC}')
-        money -= 200
+        income_tax()
     if position == 6:
         #jail
+        print(f'{bcolors.BOLD}{bcolors.WARNING}You have been caught trespassing and are sent to jail.', f'{bcolors.ENDC}')
         position = 17
         jail = True
     if position == 18:
-        # luxury tax
-        print(f'{bcolors.BOLD}{bcolors.WARNING}Luxury tax!', f'{bcolors.ENDC}')
-        money -= 500
+        luxury_tax()
+    print('\n' + f'{bcolors.BOLD}{bcolors.HEADER}━━━━━━━━━━━━━━━━━━━━━{bcolors.ENDC}' + '\n')
 
 # After game is over, if player survived past 20 rounds without going bankrupt, they have won
 if rounds > 20:
     print(f'{bcolors.BOLD}{bcolors.HEADER}You have won!', f'{bcolors.ENDC}')
-    print(f'{bcolors.BOLD}{bcolors.OKCYAN}You ended the game with:', money, f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.OKCYAN}You ended the game with:', f'{money:.0f}', f'{bcolors.ENDC}')
     # score calculation
-    score = round(money * 0.75) # + value of owned properties
+    score = round(money * 0.75 * 10) # + value of owned properties
     print(f'{bcolors.BOLD}{bcolors.OKGREEN}Your score is:', score, f'{bcolors.ENDC}')
     # check if SCORE > HIGHSCORES, if yes ADD USERNAME + SCORE TO SCOREBOARD AND REMOVE LOWEST SCORE
     # if score is new highscore, print(f'{bcolors.BOLD}{bcolors.OKGREEN}{bcolors.UNDERLINE}HIGHSCORE' + f'{bcolors.ENDC}')
