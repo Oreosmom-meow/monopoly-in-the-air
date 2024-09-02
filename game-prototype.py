@@ -10,10 +10,14 @@ jail = False
 rounds = 1
 counter = 0
 doubles = 0
+airports = [2,4,5,7,8,10,13,15,16,19,20,21]
 
 #main
 username = input('Enter your name: ')
 if username == '':
+    username = 'USERNAME'
+elif username == 'bank':
+    print('Name used cannot be "bank", defaulting to USERNAME')
     username = 'USERNAME'
 
 # colors used for printing, "stolen" from blender
@@ -97,36 +101,65 @@ def get_airport(position):
     cost = int(airport_data['cost'])
     group = airport_data['group']
     owner = airport_data['owner']
-    return airport, cost, group, owner
-def buy_airport(position):
+    upgrade_level = airport_data['upgrade_level']
+    return airport, cost, group, owner, upgrade_level
+def buy_airport(position, cost):
     global db
     global money
     airport_data = db[str(position)][0]
     airport_data['owner'] = username
-    cost = int(airport_data['cost'])
     print(airport_data['owner'])
-    money -= cost
+    money -= int(cost)
     print(money)
+def sell_airport(position, cost):
+    global db
+    global money
+    airport_data = db[str(position)][0]
+    airport_data['owner'] = ''
+    money += int(cost) * 0.5 
+    print(money)
+def upgrade_airport(position, cost, upgrade_level):
+    global db
+    global money
+    airport_data = db[str(position)][0]
+    upgrade_level = '1'
+    money -= int(cost) * 0.5 
 def airport_event(position):
     global username
     global money
     print('airport', position)
-    airport, cost, group, owner = get_airport(position)
-    print(airport, cost, group, owner)
+    airport, cost, group, owner, upgrade_level = get_airport(position)
+    print(airport, cost, group, owner, upgrade_level)
     if owner == username:
-        print('sell airport?')
-        print('upgrade airport?')
+        selling = input('"1" to sell airport !!! ADD SELLING UPGRADED, "2" to upgrade airport!!! ADD UPGRADE COST,  ENTER to continue ')
+        if selling == '1':
+            sell_airport(position, cost)
+        if selling == '2':
+            upgrade_airport(position, cost, upgrade_level)
         return
     elif owner != '':
         print('rent')
         return
     else:
         if money >= cost:
-            buying = input('"1" to buy airport?, ENTER to continue ')
+            buying = input('"1" to buy airport, ENTER to continue ')
             if buying == '1':
-                buy_airport(position)
+                buy_airport(position, cost)
             else:
                 return
+def bank_airport(position):
+    global db
+    airport_data = db[str(position)][0]
+    airport_data['owner'] = 'bank'
+
+
+bank_airports = random.sample(airports, 3)
+for position in bank_airports:
+    bank_airport(position)
+
+for position in airports:
+    airport, cost, group, owner, upgrade_level = get_airport(position)
+    print(airport, cost, owner)
 
 print('\n' + f'{bcolors.BOLD}{bcolors.HEADER}━━━━━━━━━━━━━━━━━━━━━{bcolors.ENDC}' + '\n')
 
@@ -181,7 +214,7 @@ while rounds <= 20:
 
     # Positions with airports: 2,4,5 - 7,8,10 - 13,15,16 - 19,20,21
     # Free parking at 12, nothing happens - jail(location) at 17, nothing happens
-    airports = [2,4,5,7,8,10,13,15,16,19,20,21]
+    
     # Position checks with negative outcomes, tax & jail
     if position == 3 or position == 9:
         income_tax()
