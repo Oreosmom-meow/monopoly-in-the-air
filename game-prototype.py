@@ -1,5 +1,7 @@
 # imports
 import random
+import json
+import os.path
 
 # globals
 position = 1
@@ -8,6 +10,11 @@ jail = False
 rounds = 1
 counter = 0
 doubles = 0
+
+#main
+username = input('Enter your name: ')
+if username == '':
+    username = 'USERNAME'
 
 # colors used for printing, "stolen" from blender
 class bcolors:
@@ -20,6 +27,14 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+# temp database
+if os.path.exists('newtempdb.json'):
+    with open('newtempdb.json') as tempdb:
+        db = json.load(tempdb)
+        print(f'{bcolors.BOLD}{bcolors.UNDERLINE}{bcolors.OKGREEN}Config loaded successfully.{bcolors.ENDC}\n')
+else:
+    print(f'{bcolors.BOLD}{bcolors.WARNING}\n --- \n{bcolors.UNDERLINE}Temporary database file was not found.\n --- \n{bcolors.ENDC}')
 
 # functions
 def dice_roll():
@@ -75,10 +90,45 @@ def salary():
     # will add in profit from owned properties
     money += 200
     print(f'{bcolors.BOLD}{bcolors.OKBLUE}Salary time!\nYou earned:', f'{money - money_before}','\nYou now have:', money, f'{bcolors.ENDC}')
+def get_airport(position):
+    global db
+    airport_data = db[str(position)][0]
+    airport = airport_data['name']
+    cost = int(airport_data['cost'])
+    group = airport_data['group']
+    owner = airport_data['owner']
+    return airport, cost, group, owner
+def buy_airport(position):
+    global db
+    global money
+    airport_data = db[str(position)][0]
+    airport_data['owner'] = username
+    cost = int(airport_data['cost'])
+    print(airport_data['owner'])
+    money -= cost
+    print(money)
+def airport_event(position):
+    global username
+    global money
+    print('airport', position)
+    airport, cost, group, owner = get_airport(position)
+    print(airport, cost, group, owner)
+    if owner == username:
+        print('sell airport?')
+        print('upgrade airport?')
+        return
+    elif owner != '':
+        print('rent')
+        return
+    else:
+        if money >= cost:
+            buying = input('"1" to buy airport?, ENTER to continue ')
+            if buying == '1':
+                buy_airport(position)
+            else:
+                return
 
-
-#main
-username = input('Enter your name: ')
+print('\n' + f'{bcolors.BOLD}{bcolors.HEADER}━━━━━━━━━━━━━━━━━━━━━{bcolors.ENDC}' + '\n')
 
 while rounds <= 20:
     # Information
@@ -131,17 +181,19 @@ while rounds <= 20:
 
     # Positions with airports: 2,4,5 - 7,8,10 - 13,15,16 - 19,20,21
     # Free parking at 12, nothing happens - jail(location) at 17, nothing happens
-
+    airports = [2,4,5,7,8,10,13,15,16,19,20,21]
     # Position checks with negative outcomes, tax & jail
     if position == 3 or position == 9:
         income_tax()
-    if position == 6:
+    elif position == 6:
         #jail
         print(f'{bcolors.BOLD}{bcolors.WARNING}You have been caught trespassing and are sent to jail.', f'{bcolors.ENDC}')
         position = 17
         jail = True
-    if position == 18:
+    elif position == 18:
         luxury_tax()
+    elif any(airport == position for airport in airports):
+        airport_event(position)
     print('\n' + f'{bcolors.BOLD}{bcolors.HEADER}━━━━━━━━━━━━━━━━━━━━━{bcolors.ENDC}' + '\n')
 
 # After game is over, if player survived past 20 rounds without going bankrupt, they have won
