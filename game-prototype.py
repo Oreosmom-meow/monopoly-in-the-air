@@ -191,7 +191,8 @@ while rounds <= 20:
     # POSITION CHANGE
     # CHECKS FOR DOUBLES
         if dice_roll_1 == dice_roll_2:
-            doubles += 1
+            if jail == False:
+                doubles += 1
             if doubles >= 2:
                 print(f'{bcolors.BOLD}{bcolors.WARNING}You have been jailed for rolling doubles twice in a row.', f'{bcolors.ENDC}')
                 jail = True
