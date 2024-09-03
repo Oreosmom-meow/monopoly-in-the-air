@@ -93,7 +93,7 @@ def salary():
     money_before = money
     # will add in profit from owned properties
     money += 200
-    print(f'{bcolors.BOLD}{bcolors.OKBLUE}Salary time!\nYou earned:', f'{money - money_before}','\nYou now have:', money, f'{bcolors.ENDC}')
+    print(f'{bcolors.BOLD}{bcolors.OKBLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{bcolors.ENDC}')
 def get_airport(position):
     global db
     airport_data = db[str(position)][0]
@@ -178,26 +178,29 @@ while rounds <= 20:
     dice_roll_2 = dice_roll()
 
     # JAIL
+    if counter >= 3:
+        jail = False
+        counter = 0
     if jail:
         jail_event()
-
+    else:
     # PLAYER INPUT TO PROCEED
-    input(f'{bcolors.BOLD}Roll the dice to move.{bcolors.ENDC}')
-    print(f'{bcolors.OKBLUE}You rolled{bcolors.ENDC}:',f'{dice_roll_1}, {dice_roll_2}')
+        input(f'{bcolors.BOLD}Roll the dice to move.{bcolors.ENDC}')
+        print(f'{bcolors.OKBLUE}You rolled{bcolors.ENDC}:',f'{dice_roll_1}, {dice_roll_2}')
 
     # POSITION CHANGE
     # CHECKS FOR DOUBLES
-    if dice_roll_1 == dice_roll_2:
-        doubles += 1
-        if doubles >= 2:
-            print(f'{bcolors.BOLD}{bcolors.WARNING}You have been jailed for rolling doubles twice in a row.', f'{bcolors.ENDC}')
-            jail = True
-            doubles = 0
+        if dice_roll_1 == dice_roll_2:
+            doubles += 1
+            if doubles >= 2:
+                print(f'{bcolors.BOLD}{bcolors.WARNING}You have been jailed for rolling doubles twice in a row.', f'{bcolors.ENDC}')
+                jail = True
+                doubles = 0
+            else:
+                position += dice_roll_1 + dice_roll_2
         else:
+            doubles = 0
             position += dice_roll_1 + dice_roll_2
-    else:
-        doubles = 0
-        position += dice_roll_1 + dice_roll_2
 
     # ROUND COMPLETED, PASS GO AND COLLECT $200
     if position > 22:
