@@ -97,13 +97,20 @@ def sell_airport(position): # roberto
     money = 1 #sql money
     money += 200 #it will be changed to the price + upgrade prices
     owned = False
+    print(f'You have sold this* airport! \nYou earned: ') #money amount
 
 
     pass 
 def upgrade_airport(position): # roberto
     money = 1
-    money -= 50 #25% of original cost would be cool
-    price = + 100 #add 50% of org value or same as upgrade cost
+    price = 100
+
+    if money >= price:
+        money = 1
+        money -= 50 #25% of original cost would be cool
+        price = + 100 #add 50% of org value or same as upgrade cost
+    else:
+        print('not enough money to perform this task')
     pass
 
 def board_location(position): # iida
