@@ -51,6 +51,37 @@ def luxury_tax(): # iida
     money_before = money
     money -= 100 + money * 0.5
     print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+def get_owner(position): # Yutong
+    sql = f'select owner from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            owner = row[0]
+    return owner
+
+def get_money(username): #Yutong
+    sql = f'select money from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            money = row[0]
+        return money
+def modify_money(username):
+    update = f'update money from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(update)
+    sql = f'select money from game where user_name = "{username}"'
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            modified_money = row[0]
+    return modified_money
+
 def jail_event(): # iida
     money = 1 #sql money
     global jail_counter
@@ -99,6 +130,7 @@ def buy_airport(position): #yutong
             if userinput.upper() == 'Y':
                 temp_money = temp_money - 200
                 print(f'You have purchased 1 airport')
+                printf(f'Your money now is:'+ {modify_money(username)})
             else:
                 print(f'You choose do not buy the airport')
 def sell_airport(position): # roberto
@@ -111,36 +143,7 @@ def board_location(position): # iida
     cursor.execute(sql)
     result = cursor.fetchall()
     return result[0]
-def get_owner(position): # Yutong
-    sql = f'select owner from board where id = "{position}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            owner = row[0]
-    return owner
 
-def get_money(username): #Yutong
-    sql = f'select money from game where user_name = "{username}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            money = row[0]
-        return money
-def modify_money(username):
-    update = f'update money from game where user_name = "{username}"'
-    cursor = connection.cursor()
-    cursor.execute(update)
-    sql = f'select money from game where user_name = "{username}"'
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            modified_money = row[0]
-    return modified_money
 
 def chance_card(): # yutong
     pass 
