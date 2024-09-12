@@ -89,12 +89,12 @@ def salary(): # iida
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 def buy_airport(position): #yutong
-    if money >= 200:
-        if owner != bank #need to find a way to store owner information
+    if get_money(username) >= 200:
+        if get_owner(position) != 'bank':
             print(f'Do you want to buy the airport you landed in? (Y/n)')
             userinput = input()
             if userinput.upper() == 'Y':
-                money = global money - 200
+                money = money - 200
 def sell_airport(position): # roberto
     pass 
 def upgrade_airport(position): # roberto
@@ -112,8 +112,18 @@ def get_owner(position): # Yutong
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
-            owner = (row[0])
+            owner = row[0]
     return owner
+
+def get_money(username): #Yutong
+    sql = f'select money from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            money = row[0]
+        return money
 
 def chance_card(): # yutong
     pass 
