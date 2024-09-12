@@ -16,8 +16,8 @@ class col:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
-# global
-money = 150
+# global variables
+money = 150 #sql game.money
 rounds = 0
 position = 1
 doubles = 0
@@ -89,7 +89,12 @@ def salary(): # iida
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 def buy_airport(position): #yutong
-    pass 
+    if money >= 200:
+        if owner != bank #need to find a way to store owner information
+            print(f'Do you want to buy the airport you landed in? (Y/n)')
+            userinput = input()
+            if userinput.upper() == 'Y':
+                money = global money - 200
 def sell_airport(position): # roberto
     pass 
 def upgrade_airport(position): # roberto
@@ -100,6 +105,16 @@ def board_location(position): # iida
     cursor.execute(sql)
     result = cursor.fetchall()
     return result[0]
+def get_owner(position): # Yutong
+    sql = f'select owner from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            owner = (row[0])
+    return owner
+
 def chance_card(): # yutong
     pass 
 
