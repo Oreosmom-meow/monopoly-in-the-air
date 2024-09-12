@@ -131,9 +131,11 @@ def get_money(username): #Yutong
             money = row[0]
         return money
 def modify_money(username):
-    sql = f'update money from game where user_name = "{username}"'
+    update = f'update money from game where user_name = "{username}"'
     cursor = connection.cursor()
-    cursor.execute(Sql)
+    cursor.execute(update)
+    sql = f'select money from game where user_name = "{username}"'
+    cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
