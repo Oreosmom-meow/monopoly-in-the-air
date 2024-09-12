@@ -1,4 +1,6 @@
 import random
+from multiprocessing import connection
+
 import mysql.connector
 
 # mysql connection
@@ -89,12 +91,16 @@ def salary(): # iida
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 def buy_airport(position): #yutong
-    if get_money(username) >= 200:
+    temp_money = get_money(username)
+    if temp_money >= 200:
         if get_owner(position) != 'bank':
             print(f'Do you want to buy the airport you landed in? (Y/n)')
             userinput = input()
             if userinput.upper() == 'Y':
-                money = money - 200
+                temp_money = temp_money - 200
+                print(f'You have purchased 1 airport')
+            else:
+                print(f'You choose do not buy the airport')
 def sell_airport(position): # roberto
     pass 
 def upgrade_airport(position): # roberto
@@ -124,6 +130,15 @@ def get_money(username): #Yutong
         for row in result:
             money = row[0]
         return money
+def modify_money(username):
+    sql = f'update money from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(Sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            modified_money = row[0]
+    return modified_money
 
 def chance_card(): # yutong
     pass 
