@@ -70,7 +70,8 @@ def get_money(username): #Yutong
         for row in result:
             money = row[0]
         return money
-def modify_money(username):
+#something is wrong with this function let's fix together
+def modify_money(temp_money):
     update = f'update money from game where user_name = "{username}"'
     cursor = connection.cursor()
     cursor.execute(update)
@@ -130,9 +131,9 @@ def buy_airport(position): #yutong
             if userinput.upper() == 'Y':
                 temp_money = temp_money - 200
                 print(f'You have purchased 1 airport')
-                printf(f'Your money now is:'+ {modify_money(username)})
+                print(f'Your money now is:' + f'{modify_money(username)}')
             else:
-                print(f'You choose do not buy the airport')
+                print(f'You choose do not to buy the airport')
 def sell_airport(position): # roberto
     pass 
 def upgrade_airport(position): # roberto
