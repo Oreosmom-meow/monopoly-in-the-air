@@ -16,6 +16,9 @@ class col:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+#price = random.random(200, 350)
+#set a random price for each airport?
+
 # global
 money = 150
 rounds = 0
@@ -91,9 +94,18 @@ def salary(): # iida
 def buy_airport(position): #yutong
     pass 
 def sell_airport(position): # roberto
+    money = 1 #sql money
+    money += 200 #it will be changed to the price + upgrade prices
+    owned = False
+
+
     pass 
 def upgrade_airport(position): # roberto
-    pass 
+    money = 1
+    money -= 50 #25% of original cost would be cool
+    price = + 100 #add 50% of org value or same as upgrade cost
+    pass
+
 def board_location(position): # iida
     sql = f'select * from board where id = "{position}"'
     cursor = connection.cursor()
