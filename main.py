@@ -25,6 +25,7 @@ position = 1
 doubles = 0
 jail_counter = 0
 jailed = False
+username = ''
 
 # username
 while True:
@@ -36,6 +37,7 @@ while True:
     else:
         #! send username to game table here
         break
+print(username)
 
 # functions
 def dice_roll(): # iida
@@ -51,6 +53,7 @@ def luxury_tax(): # iida
     money_before = money
     money -= 100 + money * 0.5
     print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
 def get_owner(position): # Yutong
     sql = f'select owner from board where id = "{position}"'
     cursor = connection.cursor()
@@ -70,18 +73,12 @@ def get_money(username): #Yutong
         for row in result:
             money = row[0]
         return money
-#something is wrong with this function let's fix together
+
 def modify_money(temp_money):
-    update = f'update money from game where user_name = "{username}"'
+    global username
+    update = f'update game set money = {temp_money} where user_name = "{username}"'
     cursor = connection.cursor()
     cursor.execute(update)
-    sql = f'select money from game where user_name = "{username}"'
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            modified_money = row[0]
-    return modified_money
 
 def jail_event(): # iida
     money = 1 #sql money
@@ -107,7 +104,7 @@ def jail_event(): # iida
     if choice == '1':
         print(dice_roll_1, dice_roll_2)
         if dice_roll_1 != dice_roll_2:
-            counter += 1
+            jail_counter += 1
         else:
             print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
             jailed = False
@@ -131,7 +128,7 @@ def buy_airport(position): #yutong
             if userinput.upper() == 'Y':
                 temp_money = temp_money - 200
                 print(f'You have purchased 1 airport')
-                print(f'Your money now is:' + f'{modify_money(username)}')
+                print(f'Your money now is:' + f'{temp_money:.2f}')
             else:
                 print(f'You choose do not to buy the airport')
 def sell_airport(position): # roberto
@@ -147,7 +144,8 @@ def board_location(position): # iida
 
 
 def chance_card(): # yutong
-    pass 
+    random something
+    something happen
 
 # set board airports
 def set_board_airports():
