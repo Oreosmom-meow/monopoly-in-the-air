@@ -201,7 +201,7 @@ def chance_card(position): # yutong
         print(f'You picked card: Get out of jail. You can use it for once when you are in jail.')
         jail_card = check_jail_card(username)
         jail_card += 1
-        modify_money(jail_card)
+        modify_out_of_jail_card(jail_card)
     elif card_id == 3:
         print(f'You picked card: Go to jail. You will be moved to jail immediately.')
         jail_event()
