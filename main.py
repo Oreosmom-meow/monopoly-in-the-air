@@ -1,4 +1,5 @@
 import random
+from linecache import updatecache
 from multiprocessing import connection
 
 import mysql.connector
@@ -43,11 +44,13 @@ print(username)
 def dice_roll(): # iida
     dice = random.randint(1, 6)
     return dice
+
 def income_tax(): # iida
     money = 1 #sql money
     money_before = money
     money -= 50 + money * 0.25
     print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
 def luxury_tax(): # iida
     money = 1 #sql money
     money_before = money
@@ -79,6 +82,31 @@ def modify_money(temp_money):
     update = f'update game set money = {temp_money} where user_name = "{username}"'
     cursor = connection.cursor()
     cursor.execute(update)
+
+def check_jail_card(username):
+    sql = f'select out_jail_card from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            card_number = row[0]
+        return card_number
+
+def modify_out_of_jail_card(jail_card):
+    global username
+    sql = f'update game set out_of_jail_card = "{jail_card} where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def get_all_owned_airport(username):
+    sql = f'select COUNT("{username}") from board where owner = "{username}"'
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_number = row[0]
+        return airport_number
 
 def jail_event(): # iida
     money = 1 #sql money
@@ -114,11 +142,13 @@ def jail_event(): # iida
     else:
         print('Cheater option, card doesnt exist yet')
         jailed = False
+
 def salary(): # iida
     money = 1 #sql money
     money_before = money
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
+
 def buy_airport(position): #yutong
     temp_money = get_money(username)
     if temp_money >= 200:
@@ -143,9 +173,41 @@ def board_location(position): # iida
     return result[0]
 
 
-def chance_card(): # yutong
-    random something
-    something happen
+def chance_card(position): # yutong
+    global username
+    card_id = random.randint(1, 10)
+    temp_money = get_money(username)
+    if card_id == 1:
+        print(f'You picked card: Advance to "Go". You will get 200. ')
+        temp_money = temp_money + 200
+        modify_money(temp_money)
+        position = 1
+    elif card_id == 2:
+        print(f'You picked card: Get out of jail. You can use it for once when you are in jail.')
+        jail_card = check_jail_card(username)
+        jail_card += 1
+        modify_money(jail_card)
+    elif card_id == 3:
+        print(f'You picked card: Go to jail. You will be moved to jail immediately.')
+        jail_event()
+    elif card_id == 4:
+        print(f'You picked card: Bank pays you 50! You will get 50 from the bank.')
+        temp_money = get_money(username) + 50
+        modify_money(temp_money)
+    elif card_id == 5:
+        print(f'You picked card: Pay repair fee for all properties. You need to pay $25 for all airports you own, $50 for all the upgraded airports you own')
+        temp_money = get_money(username)
+        temp_money = temp_money - get_all_owned_airport(username) * 25
+        #missing get_all_upgraded_airports
+        modify_money(temp_money)
+    elif card_id == 6:
+        print(f'You picked card: Doctor fee. You need to pay $50 to the doctor.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
+
+
+
+
 
 # set board airports
 def set_board_airports():
