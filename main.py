@@ -80,6 +80,21 @@ def modify_money(temp_money):
     cursor = connection.cursor()
     cursor.execute(update)
 
+#i think it is necessary to also retrieve the location in order to update the specific status for that airport
+def modify_upgrade_status(temp_upgrade_status):
+    sql = f'update board set upgrade_status = {temp_upgrade_status}'
+
+
+def get_upgrade_status(position):
+    sql = f'select upgrade_status from board where id = "{position}" '
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_status = row[0]
+    return upgrade_status
+
 def jail_event(): # iida
     money = 1 #sql money
     global jail_counter
@@ -132,6 +147,20 @@ def buy_airport(position): #yutong
             else:
                 print(f'You choose do not to buy the airport')
 def sell_airport(position): # roberto
+    #check if owns, check level, check price
+    #owns, continue, price = org
+    global username
+    temp_money = get_money(username)
+    if get_owner(position) == username:
+        if get_upgrade_status(position) > 0:
+            get_upgrade_status(position)
+            temp_money = temp_money + 25
+        elif f'upgrade_status' == 0:
+            temp_money = temp_money + 100
+    print(f'You have sold this airport for {f'price':2}', f'You now have {temp_money:.2f}')
+
+
+
     pass 
 def upgrade_airport(position): # roberto
     pass 
