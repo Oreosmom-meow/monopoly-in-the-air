@@ -1,4 +1,6 @@
 import random
+from multiprocessing import connection
+
 import mysql.connector
 
 # mysql connection
@@ -16,16 +18,14 @@ class col:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
-#price = random.random(200, 350)
-#set a random price for each airport?
-
-# global
-money = 150
+# global variables
+money = 150 #sql game.money
 rounds = 0
 position = 1
 doubles = 0
 jail_counter = 0
 jailed = False
+username = ''
 
 # username
 while True:
@@ -37,6 +37,7 @@ while True:
     else:
         #! send username to game table here
         break
+print(username)
 
 # functions
 def dice_roll(): # iida
@@ -52,6 +53,33 @@ def luxury_tax(): # iida
     money_before = money
     money -= 100 + money * 0.5
     print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
+def get_owner(position): # Yutong
+    sql = f'select owner from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            owner = row[0]
+    return owner
+
+def get_money(username): #Yutong
+    sql = f'select money from game where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            money = row[0]
+        return money
+
+def modify_money(temp_money):
+    global username
+    update = f'update game set money = {temp_money} where user_name = "{username}"'
+    cursor = connection.cursor()
+    cursor.execute(update)
+
 def jail_event(): # iida
     money = 1 #sql money
     global jail_counter
@@ -76,7 +104,7 @@ def jail_event(): # iida
     if choice == '1':
         print(dice_roll_1, dice_roll_2)
         if dice_roll_1 != dice_roll_2:
-            counter += 1
+            jail_counter += 1
         else:
             print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
             jailed = False
@@ -92,35 +120,32 @@ def salary(): # iida
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 def buy_airport(position): #yutong
-    pass 
+    temp_money = get_money(username)
+    if temp_money >= 200:
+        if get_owner(position) != 'bank':
+            print(f'Do you want to buy the airport you landed in? (Y/n)')
+            userinput = input()
+            if userinput.upper() == 'Y':
+                temp_money = temp_money - 200
+                print(f'You have purchased 1 airport')
+                print(f'Your money now is:' + f'{temp_money:.2f}')
+            else:
+                print(f'You choose do not to buy the airport')
 def sell_airport(position): # roberto
-    money = 1 #sql money
-    money += 200 #it will be changed to the price + upgrade prices
-    owned = False
-    print(f'You have sold this* airport! \nYou earned: ') #money amount
-
-
     pass 
 def upgrade_airport(position): # roberto
-    money = 1
-    price = 100
-
-    if money >= price:
-        money = 1
-        money -= 50 #25% of original cost would be cool
-        price = + 100 #add 50% of org value or same as upgrade cost
-    else:
-        print('not enough money to perform this task')
-    pass
-
+    pass 
 def board_location(position): # iida
     sql = f'select * from board where id = "{position}"'
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
     return result[0]
+
+
 def chance_card(): # yutong
-    pass 
+    random something
+    something happen
 
 # set board airports
 def set_board_airports():
