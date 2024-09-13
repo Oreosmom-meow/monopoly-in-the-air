@@ -3,6 +3,8 @@ from linecache import updatecache
 from multiprocessing import connection
 
 import mysql.connector
+from mysql.connector import cursor
+
 
 # mysql connection
 
@@ -40,23 +42,7 @@ while True:
         break
 print(username)
 
-# functions
-def dice_roll(): # iida
-    dice = random.randint(1, 6)
-    return dice
-
-def income_tax(): # iida
-    money = 1 #sql money
-    money_before = money
-    money -= 50 + money * 0.25
-    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
-
-def luxury_tax(): # iida
-    money = 1 #sql money
-    money_before = money
-    money -= 100 + money * 0.5
-    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
-
+#sql related functions
 def get_owner(position): # Yutong
     sql = f'select owner from board where id = "{position}"'
     cursor = connection.cursor()
@@ -95,18 +81,44 @@ def check_jail_card(username):
 
 def modify_out_of_jail_card(jail_card):
     global username
-    sql = f'update game set out_of_jail_card = "{jail_card} where user_name = "{username}"'
+    sql = f'update game set out_of_jail_card = '{jail_card}' where user_name = '{username}'
     cursor = connection.cursor()
     cursor.execute(sql)
 
 def get_all_owned_airport(username):
-    sql = f'select COUNT("{username}") from board where owner = "{username}"'
+    sql = f'select COUNT('{username}') from board where owner = '{username}'
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
             airport_number = row[0]
         return airport_number
+
+def get_upgraded_airport_number(username):
+    sql = f'SELECT COUNT('{username}') from board WHERE owner = '{username}' AND upgrade_status > 0'
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_number = row[0]
+        return upgrade_number
+
+# functions
+def dice_roll(): # iida
+    dice = random.randint(1, 6)
+    return dice
+
+def income_tax(): # iida
+    money = 1 #sql money
+    money_before = money
+    money -= 50 + money * 0.25
+    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
+def luxury_tax(): # iida
+    money = 1 #sql money
+    money_before = money
+    money -= 100 + money * 0.5
+    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
 
 def jail_event(): # iida
     money = 1 #sql money
@@ -152,15 +164,19 @@ def salary(): # iida
 def buy_airport(position): #yutong
     temp_money = get_money(username)
     if temp_money >= 200:
-        if get_owner(position) != 'bank':
-            print(f'Do you want to buy the airport you landed in? (Y/n)')
-            userinput = input()
-            if userinput.upper() == 'Y':
-                temp_money = temp_money - 200
-                print(f'You have purchased 1 airport')
-                print(f'Your money now is:' + f'{temp_money:.2f}')
-            else:
-                print(f'You choose do not to buy the airport')
+        print(f'Do you want to buy the airport you landed in? (Y/n)')
+        userinput = input()
+        if userinput == 'Y' or userinput == 'y':
+            temp_money = temp_money - 200
+            print(f'You have purchased 1 airport')
+            print(f'Your money now is:' + f'{temp_money}')
+            modify_money(temp_money)
+        elif userinput == 'n' or userinput == 'N':
+            print(f'You choose not to buy the airport')
+        else:
+            print(f'Please input the given options.')
+    else:
+        print("Your money can't afford to buy the airport. You will pass this airport.")
 def sell_airport(position): # roberto
     pass 
 def upgrade_airport(position): # roberto
@@ -172,13 +188,12 @@ def board_location(position): # iida
     result = cursor.fetchall()
     return result[0]
 
-
 def chance_card(position): # yutong
     global username
     card_id = random.randint(1, 10)
     temp_money = get_money(username)
     if card_id == 1:
-        print(f'You picked card: Advance to "Go". You will get 200. ')
+        print(f'You picked card: Advance to "Go". You will get $200. Congratulations.')
         temp_money = temp_money + 200
         modify_money(temp_money)
         position = 1
@@ -191,21 +206,35 @@ def chance_card(position): # yutong
         print(f'You picked card: Go to jail. You will be moved to jail immediately.')
         jail_event()
     elif card_id == 4:
-        print(f'You picked card: Bank pays you 50! You will get 50 from the bank.')
+        print(f'You picked card: Bank pays you 50! You will get $50 from the bank.Congratulations.')
         temp_money = get_money(username) + 50
         modify_money(temp_money)
     elif card_id == 5:
         print(f'You picked card: Pay repair fee for all properties. You need to pay $25 for all airports you own, $50 for all the upgraded airports you own')
         temp_money = get_money(username)
         temp_money = temp_money - get_all_owned_airport(username) * 25
-        #missing get_all_upgraded_airports
+        temp_money = temp_money - get_upgraded_airport_number(username) * 50
         modify_money(temp_money)
     elif card_id == 6:
         print(f'You picked card: Doctor fee. You need to pay $50 to the doctor.')
         temp_money = get_money(username) - 50
         modify_money(temp_money)
-
-
+    elif card_id == 7:
+        print(f'You picked card: Grand opening night. You will get $50 from the bank. Congratulations.')
+        temp_money = get_money(username) + 50
+        modify_money(temp_money)
+    elif card_id == 8:
+        print(f'You picked card: School fee. You need to pay $50 to the school.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
+    elif card_id == 9:
+        print(f'You picked card: Receive consultancy fee. You will get $25 from the bank. Congratulations.')
+        temp_money = get_money(username) + 25
+        modify_money(temp_money)
+    elif card_id == 10:
+        print(f'You picked card: Elected as chairman of the board. You need to pay $50 to the bank.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
 
 
 
