@@ -1,13 +1,20 @@
 import random
 from linecache import updatecache
 from multiprocessing import connection
-
 import mysql.connector
 from mysql.connector import cursor
 
 
 # mysql connection
-
+'''
+connection = mysql.connector.connect(
+    user="yutongd",
+    password="12345",
+    host="mysql.metropolia.fi",
+    port=3306,
+    database="yutongd"
+)
+'''
 
 # classes
 class col:
@@ -44,7 +51,7 @@ print(username)
 
 #sql related functions
 def get_owner(position): # Yutong
-    sql = f'select owner from board where id = "{position}"'
+    sql = f"select owner from board where id = {position}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -54,54 +61,98 @@ def get_owner(position): # Yutong
     return owner
 
 def get_money(username): #Yutong
-    sql = f'select money from game where user_name = "{username}"'
+    sql = f"select money from game where user_name = ’{username}‘"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
             money = row[0]
-        return money
+    return money
 
-def modify_money(temp_money):
-    global username
-    update = f'update game set money = {temp_money} where user_name = "{username}"'
+def get_all_owned_airport(username):
+    sql = f"select COUNT(owner) from board where owner = '{username}'"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_number = row[0]
+    return airport_number
+
+def get_upgrade_status(position):
+    sql = f"select upgrade_status from board where id = {position} "
     cursor = connection.cursor()
-    cursor.execute(update)
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_status = row[0]
+    return upgrade_status
+
+def check_airport_owner(position):
+    sql = f"select owner from board where id = {position}"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_owner = row[0]
+    return airport_owner
 
 def check_jail_card(username):
-    sql = f'select out_jail_card from game where user_name = "{username}"'
+    sql = f"select out_jail_card from game where user_name = '{username}'"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
             card_number = row[0]
-        return card_number
-
-def modify_out_of_jail_card(jail_card):
-    global username
-    sql = f'update game set out_of_jail_card = '{jail_card}' where user_name = '{username}'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-
-def get_all_owned_airport(username):
-    sql = f'select COUNT('{username}') from board where owner = '{username}'
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            airport_number = row[0]
-        return airport_number
+    return card_number
 
 def get_upgraded_airport_number(username):
-    sql = f'SELECT COUNT('{username}') from board WHERE owner = '{username}' AND upgrade_status > 0'
+    sql = f"SELECT COUNT(owner) from board WHERE owner = '{username}' AND upgrade_status > 0"
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
             upgrade_number = row[0]
-        return upgrade_number
+    return upgrade_number
+
+def modify_money(temp_money):
+    global username
+    update = f"update game set money = {temp_money} where user_name = '{username}'"
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_owner_to_user(position):
+    global username
+    update = (f"update game set owner = '{username}' where id = position")
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_owner_to_bank(position):
+    global username
+    update = (f"update game set owner = 'bank' where id = position")
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_out_of_jail_card(jail_card):
+    global username
+    sql = f"update game set out_of_jail_card = '{jail_card}' where user_name = '{username}'"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def modify_airport_status(position, temp_status):
+    global username
+    sql = f"update board set upgrade_status = temp_status where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def board_location(position): # iida
+    sql = f'select * from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    return result[0]
 
 # functions
 def dice_roll(): # iida
@@ -162,6 +213,7 @@ def salary(): # iida
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 
 def buy_airport(position): #yutong
+    global username
     temp_money = get_money(username)
     if temp_money >= 200:
         print(f'Do you want to buy the airport you landed in? (Y/n)')
@@ -171,22 +223,39 @@ def buy_airport(position): #yutong
             print(f'You have purchased 1 airport')
             print(f'Your money now is:' + f'{temp_money}')
             modify_money(temp_money)
+            modify_owner_to_user(position)
         elif userinput == 'n' or userinput == 'N':
             print(f'You choose not to buy the airport')
         else:
             print(f'Please input the given options.')
     else:
         print("Your money can't afford to buy the airport. You will pass this airport.")
+
 def sell_airport(position): # roberto
-    pass 
+    global username
+    temp_money = get_money(username)
+    if get_owner(position) == 'username':
+        upgrade_level = get_upgrade_status(position)
+        print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
+        userinput = input()
+        if userinput == 'Y' or 'y' and upgrade_level > 0:
+            temp_money = temp_money + 200
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+        elif userinput == 'Y' or 'y' and upgrade_level == 0:
+            temp_money = temp_money + 200
+            modify_owner_to_bank(position)
+            print(f'You have sold this airport to bank and your current money is {temp_money}')
+        elif userinput == 'n' or userinput == 'N':
+            print(f'You choose not to sell it. You will continue to play.')
+    else:
+        pass
+
+
 def upgrade_airport(position): # roberto
-    pass 
-def board_location(position): # iida
-    sql = f'select * from board where id = "{position}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    return result[0]
+    pass
 
 def chance_card(position): # yutong
     global username
