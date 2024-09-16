@@ -1,8 +1,20 @@
 import random
+from linecache import updatecache
+from multiprocessing import connection
 import mysql.connector
+from mysql.connector import cursor
+
 
 # mysql connection
-
+'''
+connection = mysql.connector.connect(
+    user="yutongd",
+    password="12345",
+    host="mysql.metropolia.fi",
+    port=3306,
+    database="yutongd"
+)
+'''
 
 # classes
 class col:
@@ -16,16 +28,22 @@ class col:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+<<<<<<< HEAD
 #price = random.random(200, 350)
 #set a random price for each airport?
 
 # global
 money = 150
+=======
+# global variables
+money = 150 #sql game.money
+>>>>>>> origin/test_yt
 rounds = 0
 position = 1
 doubles = 0
 jail_counter = 0
 jailed = False
+username = ''
 
 # username
 while True:
@@ -37,21 +55,130 @@ while True:
     else:
         #! send username to game table here
         break
+print(username)
+
+#sql related functions
+def get_owner(position): # Yutong
+    sql = f"select owner from board where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            owner = row[0]
+    return owner
+
+def get_money(username): #Yutong
+    sql = f"select money from game where user_name = ’{username}‘"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            money = row[0]
+    return money
+
+def get_all_owned_airport(username):
+    sql = f"select COUNT(owner) from board where owner = '{username}'"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_number = row[0]
+    return airport_number
+
+def get_upgrade_status(position):
+    sql = f"select upgrade_status from board where id = {position} "
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_status = row[0]
+    return upgrade_status
+
+def check_airport_owner(position):
+    sql = f"select owner from board where id = {position}"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_owner = row[0]
+    return airport_owner
+
+def check_jail_card(username):
+    sql = f"select out_jail_card from game where user_name = '{username}'"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            card_number = row[0]
+    return card_number
+
+def get_upgraded_airport_number(username):
+    sql = f"SELECT COUNT(owner) from board WHERE owner = '{username}' AND upgrade_status > 0"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_number = row[0]
+    return upgrade_number
+
+def modify_money(temp_money):
+    global username
+    update = f"update game set money = {temp_money} where user_name = '{username}'"
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_owner_to_user(position):
+    global username
+    update = (f"update game set owner = '{username}' where id = position")
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_owner_to_bank(position):
+    global username
+    update = (f"update game set owner = 'bank' where id = position")
+    cursor = connection.cursor()
+    cursor.execute(update)
+
+def modify_out_of_jail_card(jail_card):
+    global username
+    sql = f"update game set out_of_jail_card = '{jail_card}' where user_name = '{username}'"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def modify_airport_status(position, temp_status):
+    global username
+    sql = f"update board set upgrade_status = temp_status where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def board_location(position): # iida
+    sql = f'select * from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    return result[0]
 
 # functions
 def dice_roll(): # iida
     dice = random.randint(1, 6)
     return dice
+
 def income_tax(): # iida
     money = 1 #sql money
     money_before = money
     money -= 50 + money * 0.25
     print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
 def luxury_tax(): # iida
     money = 1 #sql money
     money_before = money
     money -= 100 + money * 0.5
     print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+
 def jail_event(): # iida
     money = 1 #sql money
     global jail_counter
@@ -76,7 +203,7 @@ def jail_event(): # iida
     if choice == '1':
         print(dice_roll_1, dice_roll_2)
         if dice_roll_1 != dice_roll_2:
-            counter += 1
+            jail_counter += 1
         else:
             print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
             jailed = False
@@ -86,14 +213,34 @@ def jail_event(): # iida
     else:
         print('Cheater option, card doesnt exist yet')
         jailed = False
+
 def salary(): # iida
     money = 1 #sql money
     money_before = money
     money += 200 + 1 #property values
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
+
 def buy_airport(position): #yutong
-    pass 
+    global username
+    temp_money = get_money(username)
+    if temp_money >= 200:
+        print(f'Do you want to buy the airport you landed in? (Y/n)')
+        userinput = input()
+        if userinput == 'Y' or userinput == 'y':
+            temp_money = temp_money - 200
+            print(f'You have purchased 1 airport')
+            print(f'Your money now is:' + f'{temp_money}')
+            modify_money(temp_money)
+            modify_owner_to_user(position)
+        elif userinput == 'n' or userinput == 'N':
+            print(f'You choose not to buy the airport')
+        else:
+            print(f'Please input the given options.')
+    else:
+        print("Your money can't afford to buy the airport. You will pass this airport.")
+
 def sell_airport(position): # roberto
+<<<<<<< HEAD
     money = 1 #sql money
     money += 200 #it will be changed to the price + upgrade prices
     owned = False
@@ -121,6 +268,82 @@ def board_location(position): # iida
     return result[0]
 def chance_card(): # yutong
     pass 
+=======
+    global username
+    temp_money = get_money(username)
+    if get_owner(position) == 'username':
+        upgrade_level = get_upgrade_status(position)
+        print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
+        userinput = input()
+        if userinput == 'Y' or 'y' and upgrade_level > 0:
+            temp_money = temp_money + 200
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+        elif userinput == 'Y' or 'y' and upgrade_level == 0:
+            temp_money = temp_money + 200
+            modify_owner_to_bank(position)
+            print(f'You have sold this airport to bank and your current money is {temp_money}')
+        elif userinput == 'n' or userinput == 'N':
+            print(f'You choose not to sell it. You will continue to play.')
+    else:
+        pass
+
+
+def upgrade_airport(position): # roberto
+    pass
+
+def chance_card(position): # yutong
+    global username
+    card_id = random.randint(1, 10)
+    temp_money = get_money(username)
+    if card_id == 1:
+        print(f'You picked card: Advance to "Go". You will get $200. Congratulations.')
+        temp_money = temp_money + 200
+        modify_money(temp_money)
+        position = 1
+    elif card_id == 2:
+        print(f'You picked card: Get out of jail. You can use it for once when you are in jail.')
+        jail_card = check_jail_card(username)
+        jail_card += 1
+        modify_out_of_jail_card(jail_card)
+    elif card_id == 3:
+        print(f'You picked card: Go to jail. You will be moved to jail immediately.')
+        jail_event()
+    elif card_id == 4:
+        print(f'You picked card: Bank pays you 50! You will get $50 from the bank.Congratulations.')
+        temp_money = get_money(username) + 50
+        modify_money(temp_money)
+    elif card_id == 5:
+        print(f'You picked card: Pay repair fee for all properties. You need to pay $25 for all airports you own, $50 for all the upgraded airports you own')
+        temp_money = get_money(username)
+        temp_money = temp_money - get_all_owned_airport(username) * 25
+        temp_money = temp_money - get_upgraded_airport_number(username) * 50
+        modify_money(temp_money)
+    elif card_id == 6:
+        print(f'You picked card: Doctor fee. You need to pay $50 to the doctor.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
+    elif card_id == 7:
+        print(f'You picked card: Grand opening night. You will get $50 from the bank. Congratulations.')
+        temp_money = get_money(username) + 50
+        modify_money(temp_money)
+    elif card_id == 8:
+        print(f'You picked card: School fee. You need to pay $50 to the school.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
+    elif card_id == 9:
+        print(f'You picked card: Receive consultancy fee. You will get $25 from the bank. Congratulations.')
+        temp_money = get_money(username) + 25
+        modify_money(temp_money)
+    elif card_id == 10:
+        print(f'You picked card: Elected as chairman of the board. You need to pay $50 to the bank.')
+        temp_money = get_money(username) - 50
+        modify_money(temp_money)
+
+
+>>>>>>> origin/test_yt
 
 # set board airports
 def set_board_airports():
