@@ -298,7 +298,6 @@ def upgrade_airport(position): # roberto
     pass
 
 def chance_card(position): # yutong
-    global username
     card_id = random.randint(1, 10)
     temp_money = get_money(username)
     if card_id == 1:
