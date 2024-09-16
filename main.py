@@ -40,7 +40,9 @@ while True:
     elif username == 'bank':
         print('Username cannot be "bank"')
     else:
-        #! send username to game table here
+        sql = f"update game set user_name = '{username}';"
+        cursor = connection.cursor()
+        cursor.execute(sql)
         break
 print(username)
 
@@ -56,14 +58,12 @@ def get_owner(position): # Yutong
     return owner
 
 def get_money(username): #Yutong
-    sql = f"select money from game where user_name = ’{username}‘"
+    sql = f"select money from game where user_name = '{username}'"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            money = row[0]
-    return money
+    print(result[0][0])
+    return result[0][0]
 
 def get_airport_price(position):
     sql = f"select price from board where id = {position}"
@@ -147,6 +147,7 @@ def modify_money(temp_money):
     update = f"update game set money = {temp_money} where user_name = '{username}'"
     cursor = connection.cursor()
     cursor.execute(update)
+    get_money(username)
 
 def modify_owner_to_user(position):
     global username
@@ -363,21 +364,24 @@ def board_location(position): # iida
 
 
 
-
 # GAME START FUNCTION RUNNING
 # set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ working sql when pls
 def set_board_airports():
-#    sql = f"insert into board (airport_name, country) select name, iso_country from ( with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3) AS temp_table;"
-#    cursor = connection.cursor()
- #   cursor.execute(sql)
-  #  result = cursor.fetchall()
-   # for row in result:
-    #    print(f"{row}")
+    airportnumbers = (2,3,5,8,10,11,14,15,17,19,21,22)
+    i = 0
+    sql = f"with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3;"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    for row in result:
+        sql = f'update board set board.airport_name = "{row[0]}", board.country = "{row[1]}" where board.id = "{airportnumbers[i]}";'
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        i += 1
     return
 set_board_airports()
 # set starting money
 modify_money(150)
-
 
 
 
