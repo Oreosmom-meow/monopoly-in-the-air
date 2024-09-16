@@ -65,6 +65,36 @@ def get_money(username): #Yutong
             money = row[0]
     return money
 
+def get_airport_price(position):
+    sql = f"select price from board where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            price = row[0]
+    return price
+
+def get_airport_name(position):
+    sql = f"select airport_name from board where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_name = row[0]
+    return airport_name
+
+def get_type_id(position):
+    sql = f"select type_id from game where id = {position}"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            type_id = row[0]
+    return type_id
+
 def get_all_owned_airport(username):
     sql = f"select COUNT(owner) from board where owner = '{username}'"
     cursor.execute(sql)
@@ -219,7 +249,8 @@ def buy_airport(position): #yutong
         print(f'Do you want to buy the airport you landed in? (Y/n)')
         userinput = input()
         if userinput == 'Y' or userinput == 'y':
-            temp_money = temp_money - 200
+            temp_price = get_airport_price(position)
+            temp_money = temp_money - temp_price
             print(f'You have purchased 1 airport')
             print(f'Your money now is:' + f'{temp_money}')
             modify_money(temp_money)
@@ -365,6 +396,7 @@ modify_money(150)
 
 # MAIN FUNCTION
 while rounds <= 20:
+    global username
     money = get_money(username)
     if money <= 0:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
@@ -395,7 +427,90 @@ while rounds <= 20:
             rounds += 1
             position = position - 21
         print('You are at:', position)
-        locationstuff = board_location()
+        temp_type_id = get_type_id(position)
+        temp_money = get_money(username)
+        if temp_type_id == 0:
+            if position == 1 and rounds != 1:
+                temp_money = temp_money + 200
+                print(f'You have landed on Go cell. You will get $200 from the bank. Your money is currently ${temp_money}')
+            elif position == 1 and round == 1:
+                print(f'You have started the game from GO cell.')
+            elif position == 12:
+                print(f'You have landed on Free Parking cell. You will pass.')
+            elif position == 17:
+                #I don't know what to put here
+                print(f'You have landed on Jail.')
+        elif temp_type_id == 1:
+            print(f'You have landed on an airport cell. Press any key to continue.')
+            userinput = input()
+            if userinput == '':
+                owner = check_airport_owner(position)
+                airport_price = get_airport_price(position)
+                airport_name = get_airport_name(position)
+                if owner == username:
+                    upgrade_level = get_upgrade_status(position)
+                    if temp_money < airport_price:
+                        print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can sell this airport. Do you want to sell? (Y/N)')
+                        userinput = input(f'{col.BOLD}{col.YELLOW}').upper()
+                        if userinput == 'N':
+                            pass
+                        elif userinput == 'Y':
+                            sell_airport(position)
+                        else:
+                            print(f'{col.BOLD}{col.RED}Invalid input{col.END}')
+                    elif temp_money >= airport_price:
+                        print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can sell or upgrade this airport. Do you want to sell or upgrade? Please enter to skip. (sell/upgrade)')
+                        userinput = input().lower()
+                        if userinput == 'sell':
+                            sell_airport(position)
+                            temp_money = get_money(username)
+                            print(f'{col.BOLD}{col.GREEN}You have successfully sold {airport_name}. You current money is {temp_money}. {col.END}')
+                        elif userinput == 'upgrade':
+                            upgrade_airport(position)
+                            temp_money = get_money(username)
+                            print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+                        else:
+                            pass
+                elif owner == 'bank':
+                    rent = airport_price * 0.5
+                    temp_money = temp_money - rent
+                    modify_money(temp_money)
+                    print(f'Bank owns {airport_name} and you need to pay rent to the bank at price of {rent}. Your current money is {temp_money} after paying the rent. {col.END}')
+                elif owner == '':
+                    print(f'{airport_name} is available for purchase. The price is {airport_price}. Do you want to buy it? (Y/N)')
+                    userinput = input().upper()
+                    if userinput == 'N':
+                        pass
+                    elif userinput == 'Y':
+                        buy_airport(position)
+                        temp_money = get_money(username)
+                        print(f'You purchased {airport_name} at price of {airport_price}. Your current money is {temp_money} after purchase.')
+        elif temp_type_id == 2:
+            print(f'You have landed on chance cell. You will randomly select a card from the deck. Press any key to continue.')
+            userinput = input()
+            if userinput == '':
+                chance_card(position)
+        elif temp_type_id == 3:
+            print(f'You have landed on Go to Jail cell. You will be sent to jail immediately. :)) Press any key to continue.')
+            userinput = input()
+            position = 17
+            #call jail event?
+        elif temp_type_id == 4:
+            print(f'You have landed on income tax cell. You will need to pay ')
+            income_tax()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
