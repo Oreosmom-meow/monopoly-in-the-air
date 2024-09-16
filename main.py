@@ -496,21 +496,11 @@ while rounds <= 20:
             position = 17
             #call jail event?
         elif temp_type_id == 4:
-            print(f'You have landed on income tax cell. You will need to pay ')
+            print(f'You have landed on income tax cell. Press any key to continue. ')
             income_tax()
-
-
-
-
-
-
-
-
-
-
-
-
-
+        elif temp_type_id == 5:
+            print(f'You have landed on luxury tax cell. Press any key to continue.')
+            luxury_tax()
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
