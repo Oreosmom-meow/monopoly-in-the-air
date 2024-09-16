@@ -251,7 +251,7 @@ def sell_airport(position): # roberto
         elif userinput == 'n' or userinput == 'N':
             print(f'You choose not to sell it. You will continue to play.')
     else:
-        pass
+        pass    
 
 
 def upgrade_airport(position): # roberto
@@ -334,7 +334,7 @@ def board_location(position): # iida
 
 
 # GAME START FUNCTION RUNNING
-# set board airports
+# set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ working sql when pls
 def set_board_airports():
 #    sql = f"insert into board (airport_name, country) select name, iso_country from ( with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3) AS temp_table;"
 #    cursor = connection.cursor()
