@@ -86,7 +86,7 @@ def get_airport_name(position):
     return airport_name
 
 def get_type_id(position):
-    sql = f"select type_id from game where id = {position}"
+    sql = f"select type_id from board where id = {position}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -400,7 +400,6 @@ modify_money(150)
 
 # MAIN FUNCTION
 while rounds <= 20:
-    global username
     money = get_money(username)
     if money <= 0:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
@@ -420,7 +419,7 @@ while rounds <= 20:
             doubles += 1
             if doubles >= 2:
                 print(f'{col.BOLD}{col.WARNING}You have been jailed for rolling doubles twice.{col.END}')
-                jail = True
+                jailed = True
                 doubles = 0
             else:
                 position += dice_roll_1 + dice_roll_2
