@@ -1,12 +1,9 @@
 import random
-from linecache import updatecache
-from multiprocessing import connection
 import mysql.connector
 from mysql.connector import cursor
 
 
 # mysql connection
-'''
 connection = mysql.connector.connect(
     user="yutongd",
     password="12345",
@@ -14,7 +11,6 @@ connection = mysql.connector.connect(
     port=3306,
     database="yutongd"
 )
-'''
 
 # classes
 class col:
@@ -28,16 +24,7 @@ class col:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
-<<<<<<< HEAD
-#price = random.random(200, 350)
-#set a random price for each airport?
-
-# global
-money = 150
-=======
 # global variables
-money = 150 #sql game.money
->>>>>>> origin/test_yt
 rounds = 0
 position = 1
 doubles = 0
@@ -168,21 +155,24 @@ def dice_roll(): # iida
     return dice
 
 def income_tax(): # iida
-    money = 1 #sql money
-    money_before = money
+    global username
+    money = get_money(username)
+    temp_money = money
     money -= 50 + money * 0.25
-    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
 
 def luxury_tax(): # iida
-    money = 1 #sql money
-    money_before = money
+    global username
+    money = get_money(username)
+    temp_money = money
     money -= 100 + money * 0.5
-    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {money_before - money:.0f} in taxes.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
 
 def jail_event(): # iida
-    money = 1 #sql money
     global jail_counter
     global jailed
+    global username
+    money = get_money(username)
 
     dice_roll_1 = dice_roll()
     dice_roll_2 = dice_roll()
@@ -215,10 +205,12 @@ def jail_event(): # iida
         jailed = False
 
 def salary(): # iida
-    money = 1 #sql money
-    money_before = money
-    money += 200 + 1 #property values
-    print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - money_before:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
+    global username
+    money = get_money(username)
+    temp_money = money
+    temp_money += 200 + 1 #property values
+    modify_money(temp_money)
+    print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - temp_money:.0f}','\nYou now have:', f'{money:.0f}', f'{col.END}')
 
 def buy_airport(position): #yutong
     global username
@@ -240,35 +232,6 @@ def buy_airport(position): #yutong
         print("Your money can't afford to buy the airport. You will pass this airport.")
 
 def sell_airport(position): # roberto
-<<<<<<< HEAD
-    money = 1 #sql money
-    money += 200 #it will be changed to the price + upgrade prices
-    owned = False
-    print(f'You have sold this* airport! \nYou earned: ') #money amount
-
-
-    pass 
-def upgrade_airport(position): # roberto
-    money = 1
-    price = 100
-
-    if money >= price:
-        money = 1
-        money -= 50 #25% of original cost would be cool
-        price = + 100 #add 50% of org value or same as upgrade cost
-    else:
-        print('not enough money to perform this task')
-    pass
-
-def board_location(position): # iida
-    sql = f'select * from board where id = "{position}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    return result[0]
-def chance_card(): # yutong
-    pass 
-=======
     global username
     temp_money = get_money(username)
     if get_owner(position) == 'username':
@@ -292,6 +255,14 @@ def chance_card(): # yutong
 
 
 def upgrade_airport(position): # roberto
+    money = 1
+    price = 100
+    if money >= price:
+        money = 1
+        money -= 50 #25% of original cost would be cool
+        price = + 100 #add 50% of org value or same as upgrade cost
+    else:
+        print('not enough money to perform this task')
     pass
 
 def chance_card(position): # yutong
@@ -342,9 +313,27 @@ def chance_card(position): # yutong
         temp_money = get_money(username) - 50
         modify_money(temp_money)
 
+def board_location(position): # iida
+    sql = f'select * from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    return result[0]
 
->>>>>>> origin/test_yt
 
+
+
+
+
+
+
+
+
+
+
+
+
+# GAME START FUNCTION RUNNING
 # set board airports
 def set_board_airports():
 #    sql = f"insert into board (airport_name, country) select name, iso_country from ( with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3) AS temp_table;"
@@ -354,12 +343,29 @@ def set_board_airports():
    # for row in result:
     #    print(f"{row}")
     return
-bank_airports = [] #random.sample(1, 3)
-for position in bank_airports:
-    pass
-    # set board location owner as "bank"
 set_board_airports()
+# set starting money
+modify_money(150)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# MAIN FUNCTION
 while rounds <= 20:
+    money = get_money(username)
     if money <= 0:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
         break
