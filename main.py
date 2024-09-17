@@ -1,7 +1,7 @@
 import random
 import mysql.connector
 from mysql.connector import cursor
-from tqdm import tqdm
+#from tqdm import tqdm
 import time
 
 # mysql connection
@@ -188,6 +188,7 @@ def income_tax(): # iida
     money = get_money(username)
     temp_money = money
     money -= 50 + money * 0.25
+    modify_money(money)
     print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
 
 def luxury_tax(): # iida
@@ -195,6 +196,7 @@ def luxury_tax(): # iida
     money = get_money(username)
     temp_money = money
     money -= 100 + money * 0.5
+    modify_money(money)
     print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
 
 def jail_event(): # iida
@@ -239,7 +241,7 @@ def salary(): # iida
     temp_money = money
     temp_money += 200 + 1 #property values
     modify_money(temp_money)
-    print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{money - temp_money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
+    print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{temp_money - money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
 
 def buy_airport(position): #yutong
     global username
@@ -336,11 +338,11 @@ def board_location(position): # iida
     return result[0]
 
 #visualization function
-def progress_bar():
-    for i in tqdm(range(100),
-              desc="Game Loading…",
-              ascii=False, ncols=100):
-        time.sleep(0.09)
+#def progress_bar():
+ #   for i in tqdm(range(100),
+  #            desc="Game Loading…",
+   #           ascii=False, ncols=100):
+    #    time.sleep(0.09)
 
 
 # GAME START FUNCTION RUNNING
@@ -386,6 +388,7 @@ while rounds <= 20:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
         break
     print('\n' + f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
+    print(jailed)
     if jail_counter >= 3:
         jailed = False
         counter = 0
