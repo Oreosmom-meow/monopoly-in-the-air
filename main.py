@@ -1,4 +1,6 @@
 import random
+from symbol import continue_stmt
+
 import mysql.connector
 from mysql.connector import cursor
 import time
@@ -282,17 +284,28 @@ def sell_airport(position): # roberto
             print(f'You choose not to sell it. You will continue to play.')
     else:
         pass    
+#def get_country_from_id
 
+def check_owns_all_of_country(position):
+    global username
+    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+    if result[0] == 3:
+        return True
+    else:
+        return False
 
 def upgrade_airport(position): # roberto
-    money = 1
-    price = 100
-    if money >= price:
-        money = 1
-        money -= 50 #25% of original cost would be cool
-        price = + 100 #add 50% of org value or same as upgrade cost
-    else:
-        print('not enough money to perform this task')
+    global username
+
+
+    
+    temp_price = get_airport_price(position)
+    temp_money = get_money(username) - 25% temp_price
+
     pass
 
 def chance_card(position): # yutong
