@@ -41,6 +41,20 @@ username = ''
 
 
 #sql related functions
+#def get_country_from_id
+
+def check_owns_all_of_country(position):
+    global username
+    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+    if result[0] == 3:
+        return True
+    else:
+        return False
+
 def get_owner(position): # Yutong
     sql = f"select owner from board where id = {position}"
     cursor = connection.cursor()
@@ -284,28 +298,20 @@ def sell_airport(position): # roberto
             print(f'You choose not to sell it. You will continue to play.')
     else:
         pass    
-#def get_country_from_id
-
-def check_owns_all_of_country(position):
-    global username
-    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-
-    if result[0] == 3:
-        return True
-    else:
-        return False
 
 def upgrade_airport(position): # roberto
-    global username
-
-
-    
+    global username, temp_money
+    #   get_airport_price(position)
+    get_upgrade_status(position)
     temp_price = get_airport_price(position)
-    temp_money = get_money(username) - 25% temp_price
-
+    if upgrade_level == 1:
+        temp_money = get_money(username) - 25% temp_price
+    elif upgrade_level == 1:
+        temp_money = get_money(username) - 50% temp_price
+    elif upgrade_level == 1:
+        temp_money = get_money(username) - 75% temp_price
+    modify_money(temp_money)
+    print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
     pass
 
 def chance_card(position): # yutong
@@ -490,7 +496,6 @@ while rounds <= 20:
                         elif userinput == 'upgrade':
                             upgrade_airport(position)
                             temp_money = get_money(username)
-                            print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
                         else:
                             pass
                 elif owner == 'bank':
