@@ -1,9 +1,10 @@
 import random
 import mysql.connector
 from mysql.connector import cursor
-#from tqdm import tqdm
 import time
+import threading
 
+connectionstart = time.time()
 # mysql connection
 connection = mysql.connector.connect(
     user="yutongd",
@@ -12,6 +13,8 @@ connection = mysql.connector.connect(
     port=3306,
     database="yutongd"
 )
+connectedtime = time.time()
+print(f'Connected to the database in {connectedtime - connectionstart} seconds.')
 
 # classes
 class col:
@@ -187,22 +190,23 @@ def income_tax(): # iida
     global username
     money = get_money(username)
     temp_money = money
-    money -= 50 + money * 0.25
+    money -= round(50 + money * 0.25)
     modify_money(money)
-    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Income tax!', f'You paid {temp_money - money} in taxes.\nYou have ${money} left.', f'{col.END}')
 
 def luxury_tax(): # iida
     global username
     money = get_money(username)
     temp_money = money
-    money -= 100 + money * 0.5
+    money -= round(100 + money * 0.5)
     modify_money(money)
-    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {temp_money - money:.0f} in taxes.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {temp_money - money} in taxes.\nYou have ${money} left.', f'{col.END}')
 
 def jail_event(): # iida
     global jail_counter
     global jailed
     global username
+    global rounds
     money = get_money(username)
 
     dice_roll_1 = dice_roll()
@@ -223,17 +227,24 @@ def jail_event(): # iida
             choosing = False
     if choice == '1':
         print(dice_roll_1, dice_roll_2)
+        rounds += 1
         if dice_roll_1 != dice_roll_2:
             jail_counter += 1
         else:
             print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
             jailed = False
+            jail_counter = 0
     elif choice == '2':
         money -= 200
         jailed = False
+        jail_counter = 0
     else:
-        print('Cheater option, card doesnt exist yet')
-        jailed = False
+        if check_jail_card(username) > 0:
+            print('bee(the insect) free!')
+            jailed = False
+            jail_counter = 0
+        else:
+            print("nuh uh")
 
 def salary(): # iida
     global username
@@ -289,8 +300,7 @@ def chance_card(position): # yutong
     temp_money = get_money(username)
     if card_id == 1:
         print(f'You picked card: Advance to "Go". You will get $200. Congratulations.')
-        temp_money = temp_money + 200
-        modify_money(temp_money)
+        salary()
         position = 1
     elif card_id == 2:
         print(f'You picked card: Get out of jail. You can use it for once when you are in jail.')
@@ -337,34 +347,15 @@ def board_location(position): # iida
     result = cursor.fetchall()
     return result[0]
 
-#visualization function
-#def progress_bar():
- #   for i in tqdm(range(100),
-  #            desc="Game Loading…",
-   #           ascii=False, ncols=100):
-    #    time.sleep(0.09)
+
 
 
 # GAME START FUNCTION RUNNING
-# set up username
-while True:
-    username = input('Enter your username: ')
-    if username == '':
-        print('Username cannot be empty.')
-    elif username == 'bank':
-        print('Username cannot be "bank"')
-    else:
-        sql = f"update game set user_name = '{username}';"
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        break
-print(f'Username confirmed as {username}')
-#progress_bar()
-
-# set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ working sql when pls
+# set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ 
 def set_board_airports():
-    airportnumbers = (2,4,5,7,8,10,11,13,15,16,19,20,21)
+    airportnumbers = (2,4,5,7,8,10,13,15,16,19,20,21)
     i = 0
+    start = time.time()
     sql = f"with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3;"
     cursor = connection.cursor()
     cursor.execute(sql)
@@ -374,30 +365,61 @@ def set_board_airports():
         cursor = connection.cursor()
         cursor.execute(sql)
         i += 1
+    end = time.time()
+    print(f"Game database set up in {end - start} seconds.")
     return
-set_board_airports()
+t1 = threading.Thread(target=set_board_airports)
+t1.start()
+# set up username
+while True:
+    username = input('Enter your username: ')
+    if username == '':
+        print('Username cannot be empty.')
+    elif username == 'bank':
+        print('Username cannot be "bank"')
+    else:
+        t1.join()
+        sql = f"update game set user_name = '{username}';"
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        break
+print(f'Username confirmed as {username}')
 # set starting money
 modify_money(150)
 
 
 
 # MAIN FUNCTION
+gamestart = time.time()
 while rounds <= 20:
     money = get_money(username)
     if money <= 0:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
         break
     print('\n' + f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
+    print('\n' + f'{col.BOLD}{col.PINK}Round: {rounds}{col.END}' + '\n')
     print(jailed)
     if jail_counter >= 3:
         jailed = False
-        counter = 0
+        jail_counter = 0
     if jailed:
         jail_event()
     if not jailed:
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
-        input(f'{col.BOLD}Roll the dice to move.Press any key to roll. {col.END}')
+        devcheat = input(f'{col.BOLD}Roll the dice to move.Press any key to roll. {col.END}')
+        if devcheat == "developer privileges":
+            print("Developer mode activated")
+            cheating = True
+            command = input()
+            if command == "rounds":
+                roundnumber = int(input())
+                rounds = roundnumber
+            elif command == "money":
+                moneynumber = int(input())
+                modify_money(moneynumber)
+            elif command == "jail":
+                jailed = True
         print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
             doubles += 1
@@ -419,9 +441,8 @@ while rounds <= 20:
         airport_price = get_airport_price(position)
         airport_name = get_airport_name(position)
         country_name = get_country_name(position)
-        if temp_type_id == 0:
+        if temp_type_id == 0 and jailed == False:
             if position == 1 and rounds != 1:
-                temp_money = temp_money + 200
                 print(f'You have landed on Go cell. You will get $200 from the bank. Your money is currently ${temp_money}')
             elif position == 1 and round == 1:
                 print(f'You have started the game from GO cell.')
@@ -430,7 +451,7 @@ while rounds <= 20:
             elif position == 17:
                 #I don't know what to put here
                 print(f'You have landed on Jail. You will pass.')
-        elif temp_type_id == 1:
+        elif temp_type_id == 1 and jailed == False:
             print(f'You have landed on {airport_name} from {country_name}. The airport price is ${airport_price}. Your current money is ${temp_money}. Press any key to continue.')
             userinput = input()
             if userinput == '':
@@ -478,35 +499,34 @@ while rounds <= 20:
                     else:
                         print("Your money can't afford this airport yet. You will continue the game.")
 
-        elif temp_type_id == 2:
+        elif temp_type_id == 2 and jailed == False:
             print(f'You have landed on chance cell. You will randomly select a card from the deck. Press any key to continue.')
             userinput = input()
             if userinput == '':
                 chance_card(position)
-        elif temp_type_id == 3:
+        elif temp_type_id == 3 and jailed == False:
             print(f'You have landed on Go to Jail cell. You will be sent to jail immediately. :)) Press any key to continue.')
             userinput = input()
             if userinput == '':
                 position = 17
-                #call jail event?
-        elif temp_type_id == 4:
+                jailed = True
+        elif temp_type_id == 4 and jailed == False:
             print(f'You have landed on income tax cell. Press any key to continue. ')
             userinput = input()
             if userinput == '':
                 income_tax()
-                print(f'You now have ${temp_money} money left.')
-        elif temp_type_id == 5:
+        elif temp_type_id == 5 and jailed == False:
             print(f'You have landed on luxury tax cell. Press any key to continue.')
             userinput = input()
             if userinput == '':
                 luxury_tax()
-                print(f'You now have ${temp_money} money left.')
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
     print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{money:.0f}')
+    print(f"You finished the game in {round(time.time() - gamestart)} seconds")
     score = round(money * 0.75 * 10)
     print(f'{col.BOLD}{col.GREEN}Your score is:', score, f'{col.END}')
     # check highest score in table, if score is higher, print
-    print(f'{col.BOLD}{col.YELLOW}🜲{col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}🜲  {col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
     # print top 5 scores from table
