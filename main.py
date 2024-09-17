@@ -29,7 +29,7 @@ class col:
     END = '\033[0m'
 
 # global variables
-rounds = 0
+rounds = 1
 position = 1
 doubles = 0
 jail_counter = 0
@@ -398,7 +398,6 @@ while rounds <= 20:
         break
     print('\n' + f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
     print('\n' + f'{col.BOLD}{col.PINK}Round: {rounds}{col.END}' + '\n')
-    print(jailed)
     if jail_counter >= 3:
         jailed = False
         jail_counter = 0
