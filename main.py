@@ -1,6 +1,4 @@
 import random
-from symbol import continue_stmt
-
 import mysql.connector
 from mysql.connector import cursor
 import time
@@ -13,11 +11,18 @@ connection = mysql.connector.connect(
     password="12345",
     host="mysql.metropolia.fi",
     port=3306,
-    database="yutongd"
+    database="yutongd",
+    autocommit = True
 )
 connectedtime = time.time()
 print(f'Connected to the database in {connectedtime - connectionstart} seconds.')
 
+# reset board
+def reset_board():
+        sql = f"update board set owner = NULL, upgrade_status = 0;"
+        cursor = connection.cursor()
+        cursor.execute(sql)
+reset_board()
 # classes
 class col:
     PINK = '\033[95m'
@@ -397,6 +402,8 @@ while True:
         cursor.execute(sql)
         break
 print(f'Username confirmed as {username}')
+# set bank owner here !!
+
 # set starting money
 modify_money(150)
 
@@ -540,10 +547,27 @@ while rounds <= 20:
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
-    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{money:.0f}')
+    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{get_money(username):.0f}')
     print(f"You finished the game in {round(time.time() - gamestart)} seconds")
-    score = round(money * 0.75 * 10)
+    score = round(get_money(username) * 0.75 * 10)
     print(f'{col.BOLD}{col.GREEN}Your score is:', score, f'{col.END}')
+    cursor = connection.cursor()
+    fetchscoresql = f'select MAX(SCORE) from high_score;'
+    cursor.execute(fetchscoresql)
+    currenthighscore = cursor.fetchall()
+    highscoresql = f'insert into high_score (user_name, score) values ("{username}",{score});'
+    cursor.execute(highscoresql)
+    if score > currenthighscore[0][0]:
+        print(f'{col.BOLD}{col.YELLOW}🜲  {col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
+    scoreboardsql = f'select user_name as USERNAME, SCORE from high_score ORDER BY score DESC LIMIT 5'
+    cursor.execute(scoreboardsql)
+    scoreboard = cursor.fetchall()
+    index = 0
+    print('USER | ','SCORE')
+    for row in scoreboard:
+        print(scoreboard[index][0], scoreboard[index][1])
+        index += 1
+    cursor.close()
+    connection.close()
     # check highest score in table, if score is higher, print
-    print(f'{col.BOLD}{col.YELLOW}🜲  {col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
     # print top 5 scores from table
