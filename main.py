@@ -413,7 +413,6 @@ print(f'Username confirmed as {username}')
 # set starting money
 modify_money(150)
 
-
 # MAIN FUNCTION
 gamestart = time.time()
 while rounds <= 20:
