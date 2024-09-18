@@ -282,6 +282,8 @@ def buy_airport(position): #yutong
     modify_money(temp_money)
     modify_owner_to_user(position)
 
+
+
 def sell_airport(position): # roberto
     global username
     temp_money = get_money(username)
@@ -289,20 +291,35 @@ def sell_airport(position): # roberto
         upgrade_level = get_upgrade_status(position)
         print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
         userinput = input()
-        if userinput == 'Y' or 'y' and upgrade_level > 0:
-            temp_money = temp_money + 200
+        if userinput == 'Y' or 'y' and upgrade_level == 3:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.75)
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+        elif userinput == 'Y' or 'y' and upgrade_level == 2:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.5)
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+        elif userinput == 'Y' or 'y' and upgrade_level == 1:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.25)
             modify_money(temp_money)
             temp_level = upgrade_level - 1
             modify_airport_status(position, temp_level)
             print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
         elif userinput == 'Y' or 'y' and upgrade_level == 0:
-            temp_money = temp_money + 200
+            temp_money = temp_money +  (get_airport_price(position) * 0.5)
             modify_owner_to_bank(position)
             print(f'You have sold this airport to bank and your current money is {temp_money}')
         elif userinput == 'n' or userinput == 'N':
             print(f'You choose not to sell it. You will continue to play.')
     else:
         pass
+
+
+
 
 def upgrade_airport(position): # roberto
     global username, temp_money
