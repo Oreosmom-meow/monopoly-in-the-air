@@ -1,4 +1,5 @@
 import random
+#from http.cookiejar import cut_port_re
 
 import mysql.connector
 from mysql.connector import cursor
@@ -211,7 +212,7 @@ def modify_out_of_jail_card(jail_card):
 
 def modify_airport_status(position, temp_status):
     global username
-    sql = f"update board set upgrade_status = temp_status where id = {position}"
+    sql = f"update board set upgrade_status = {temp_status} where id = {position}"
     cursor = connection.cursor()
     cursor.execute(sql)
 
@@ -307,59 +308,87 @@ def buy_airport(position): #yutong
 def sell_airport(position): # roberto
     global username
     temp_money = get_money(username)
-    print("x")
-    if get_owner(position) == str(username):
-        upgrade_level = get_upgrade_status(position)
-        print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
-        userinput = input()
-        if userinput == 'Y' or 'y' and upgrade_level == 3:
-            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.75)
-            modify_money(temp_money)
-            temp_level = upgrade_level - 1
-            modify_airport_status(position, temp_level)
-            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
-            print(get_money(username))
-        elif userinput == 'Y' or 'y' and upgrade_level == 2:
-            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.5)
-            modify_money(temp_money)
-            temp_level = upgrade_level - 1
-            modify_airport_status(position, temp_level)
-            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
-        elif userinput == 'Y' or 'y' and upgrade_level == 1:
-            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.25)
-            modify_money(temp_money)
-            temp_level = upgrade_level - 1
-            modify_airport_status(position, temp_level)
-            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
-        elif userinput == 'Y' or 'y' and upgrade_level == 0:
-            temp_money = temp_money +  (get_airport_price(position) * 0.5)
-            modify_owner_to_bank(position)
-            print(f'You have sold this airport to bank and your current money is {temp_money}')
-        elif userinput == 'n' or userinput == 'N':
-            print(f'You choose not to sell it. You will continue to play.')
+    upgrade_level = get_upgrade_status(position)
+    if upgrade_level == 3:
+        temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.75)
+        modify_money(temp_money)
+        temp_level = upgrade_level - 1
+        modify_airport_status(position, temp_level)
+        print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+    elif upgrade_level == 2:
+        temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.5)
+        modify_money(temp_money)
+        temp_level = upgrade_level - 1
+        modify_airport_status(position, temp_level)
+        print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+    elif upgrade_level == 1:
+        temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.25)
+        modify_money(temp_money)
+        temp_level = upgrade_level - 1
+        modify_airport_status(position, temp_level)
+        print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+    elif upgrade_level == 0:
+        temp_money = temp_money +  (get_airport_price(position) * 0.5)
+        modify_owner_to_bank(position)
+        print(f'You have sold this airport to the bank and you currently have ${temp_money}')
     else:
         pass
+
+def get_sell_price(position):
+    temp_money = get_money(username)
+    if upgrade_level == 0:
+        temp_money = (get_airport_price(position) * 0.5 * 0.5)
+        #print(f'Selling this airport will get you ${temp_money}')
+    elif upgrade_level == 1:
+        temp_money = (get_airport_price(position) * 0.5 * 0.25)
+        #print(f'Selling this level will get you ${temp_money}')
+    elif upgrade_level == 2:
+        temp_money = (get_airport_price(position) * 0.5)
+        #print(f'Selling this level will get you ${temp_money}')
+    return(temp_money)
 
 
 
 
 def upgrade_airport(position): # roberto
-    global username
     #   get_airport_price(position)
     get_upgrade_status(position)
     temp_price = get_airport_price(position)
     if upgrade_level == 0:
         temp_money = get_money(username) - 25% temp_price
         modify_money(temp_money)
-        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+        temp_level = upgrade_level + 1
+        modify_airport_status(position, temp_level)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name} to level {get_upgrade_status(position)}. You currently have ${temp_money}. {col.END}')
     elif upgrade_level == 1:
         temp_money = get_money(username) - 50% temp_price
         modify_money(temp_money)
-        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+        temp_level = upgrade_level + 1
+        modify_airport_status(position, temp_level)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name} to level {get_upgrade_status(position)}. You currently have ${temp_money}. {col.END}')
     elif upgrade_level == 2:
         temp_money = get_money(username) - 75% temp_price
         modify_money(temp_money)
-        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+        temp_level = upgrade_level + 1
+        modify_airport_status(position, temp_level)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name} to level {get_upgrade_status(position)}. You currently have ${temp_money}. {col.END}')
+
+
+def price_to_upgrade(position):
+    global username
+    get_upgrade_status(position)
+    temp_price = get_airport_price(position)
+    if upgrade_level == 0:
+        temp_money =  25% temp_price
+        #print(f'the price to upgrade is ${temp_money}')
+    elif upgrade_level == 1:
+        temp_money = 50% temp_price
+        #print(f'the price to upgrade is ${temp_money}')
+    elif upgrade_level == 2:
+        temp_money = 75% temp_price
+        #print(f'the price to upgrade is ${temp_money}')
+    return(temp_money)
+
 
 def chance_card(position): # yutong
     card_id = random.randint(1, 10)
@@ -472,7 +501,7 @@ while rounds <= 20:
     if not jailed:
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
-        devcheat = input(f'{col.BOLD}Roll the dice to move.Press any key to roll. {col.END}')
+        devcheat = input(f'{col.BOLD}Roll the dice to move. Press any key to roll. {col.END}')
         if devcheat == "developer privileges":
             print("Developer mode activated")
             cheating = True
@@ -488,7 +517,7 @@ while rounds <= 20:
             elif command == "own_all":
                 cheat_owner_to_user(username)
             elif command == "almighty":
-                modify_money(5000)
+                modify_money(1000000)
                 cheat_owner_to_user(username)
         print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
@@ -513,7 +542,7 @@ while rounds <= 20:
         country_name = get_country_name(position)
         if temp_type_id == 0 and jailed == False:
             if position == 1 and rounds != 1:
-                print(f'You have landed on Go cell. You will get $200 from the bank. Your money is currently ${temp_money}')
+                print(f'You have landed on Go cell. You will get $200 from the bank. You currently have ${temp_money}')
             elif position == 1 and round == 1:
                 print(f'You have started the game from GO cell.')
             elif position == 12:
@@ -522,11 +551,34 @@ while rounds <= 20:
                 #I don't know what to put here
                 print(f'You have landed on Jail. You will pass.')
         elif temp_type_id == 1 and jailed == False:
-            input(f'You have landed on {airport_name} from {country_name}. The airport price is ${airport_price}. Your current money is ${temp_money}. Press any key to continue.')
+            input(f'You have landed on {airport_name} from {country_name}. The airport price is ${airport_price}. You currently have ${temp_money}. Press any key to continue.')
             owner = check_airport_owner(position)
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
+                if upgrade_level == 3:
+                    print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
+                elif upgrade_level == 2:
+                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
+                elif upgrade_level == 1:
+                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
+                elif upgrade_level == 0:
+                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell airport is ${get_sell_price(position)}')
+                user_choice = input(f'Enter your choice: "s" for sell, "u" for upgrade, Enter to skip: ')
+                if user_choice == "s" or "S":
+                    sell_airport(position)
+                elif user_choice == "u" or "U":
+                    upgrade_airport(position)
+                else:
+                    pass
+
+
+
+
+
+
+                 #if have less money than price -> ask sell
+                '''
                 if temp_money < airport_price:
                     print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can sell this airport. Do you want to sell? (Y/N)')
                     userinput = input(f'{col.BOLD}{col.YELLOW}').upper()
@@ -554,12 +606,16 @@ while rounds <= 20:
                             else:
                                 pass
                         elif upgrade_level >= 3:
-                            print(f"You have upgraded {airport_name} to it's max upgrade level - 3. You can not upgrade it anymore. You will pass.")
+                            print(f"You have upgraded {airport_name} to it's max upgrade level - 3. You can not upgrade it anymore. You will pass.") '''
+
+
+
+
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
                 modify_money(temp_money)
-                print(f'Bank owns {airport_name} and you need to pay rent to the bank at price of {rent}. Your current money is {temp_money} after paying the rent. {col.END}')
+                print(f'Bank owns {airport_name} and you need to pay rent to the bank at price of {rent}. You currently have {temp_money} after paying the rent. {col.END}')
             else:
                 if temp_money > airport_price:
                     print(f'{airport_name} is available for purchase. The price is ${airport_price}. Do you want to buy it? (Y/N)')
@@ -570,7 +626,7 @@ while rounds <= 20:
                     elif userinput == 'Y':
                         buy_airport(position)
                         temp_money = get_money(username)
-                        print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. Your current money is ${temp_money} after purchase. Game continues. ')
+                        print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. You currently have ${temp_money} after purchase. Game continues. ')
                 else:
                     print("Your money can't afford this airport yet. You will continue the game.")
 
