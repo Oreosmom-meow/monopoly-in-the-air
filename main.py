@@ -46,6 +46,20 @@ username = ''
 
 
 #sql related functions
+#def get_country_from_id
+
+def check_owns_all_of_country(position):
+    global username
+    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+    if result[0] == 3:
+        return True
+    else:
+        return False
+
 def get_owner(position): # Yutong
     sql = f"select owner from board where id = {position}"
     cursor = connection.cursor()
@@ -268,6 +282,8 @@ def buy_airport(position): #yutong
     modify_money(temp_money)
     modify_owner_to_user(position)
 
+
+
 def sell_airport(position): # roberto
     global username
     temp_money = get_money(username)
@@ -275,42 +291,50 @@ def sell_airport(position): # roberto
         upgrade_level = get_upgrade_status(position)
         print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
         userinput = input()
-        if userinput == 'Y' or 'y' and upgrade_level > 0:
-            temp_money = temp_money + 200
+        if userinput == 'Y' or 'y' and upgrade_level == 3:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.75)
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+            print(get_money(username))
+        elif userinput == 'Y' or 'y' and upgrade_level == 2:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.5)
+            modify_money(temp_money)
+            temp_level = upgrade_level - 1
+            modify_airport_status(position, temp_level)
+            print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+        elif userinput == 'Y' or 'y' and upgrade_level == 1:
+            temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.25)
             modify_money(temp_money)
             temp_level = upgrade_level - 1
             modify_airport_status(position, temp_level)
             print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
         elif userinput == 'Y' or 'y' and upgrade_level == 0:
-            temp_money = temp_money + 200
+            temp_money = temp_money +  (get_airport_price(position) * 0.5)
             modify_owner_to_bank(position)
             print(f'You have sold this airport to bank and your current money is {temp_money}')
         elif userinput == 'n' or userinput == 'N':
             print(f'You choose not to sell it. You will continue to play.')
     else:
-        pass    
-#def get_country_from_id
+        pass
 
-def check_owns_all_of_country(position):
-    global username
-    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
 
-    if result[0] == 3:
-        return True
-    else:
-        return False
+
 
 def upgrade_airport(position): # roberto
     global username
-
-
-    
+    #   get_airport_price(position)
+    get_upgrade_status(position)
     temp_price = get_airport_price(position)
-    temp_money = get_money(username) - 25% temp_price
-
+    if upgrade_level == 1:
+        temp_money = get_money(username) - 25% temp_price
+    elif upgrade_level == 1:
+        temp_money = get_money(username) - 50% temp_price
+    elif upgrade_level == 1:
+        temp_money = get_money(username) - 75% temp_price
+    modify_money(temp_money)
+    print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
     pass
 
 def chance_card(position): # yutong
@@ -406,8 +430,6 @@ print(f'Username confirmed as {username}')
 
 # set starting money
 modify_money(150)
-
-
 
 # MAIN FUNCTION
 gamestart = time.time()
