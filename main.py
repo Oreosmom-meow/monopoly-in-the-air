@@ -50,7 +50,7 @@ username = ''
 
 def check_owns_all_of_country(position):
     global username
-    sql = f"select count(owner) from board where country in ( select country from board where id = '{position}'"
+    sql = f"select count(owner) from board where country in ( select country from board where id = '{position}')"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
