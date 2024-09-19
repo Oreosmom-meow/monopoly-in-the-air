@@ -1,4 +1,6 @@
 import random
+from http.cookiejar import cut_port_re
+
 import mysql.connector
 from mysql.connector import cursor
 import time
@@ -50,12 +52,12 @@ username = ''
 
 def check_owns_all_of_country(position):
     global username
-    sql = f'select count(owner) from board where country in ( select country from board where id = "{position}"'
+    sql = f"select count(owner) from board where country in ( select country from board where id = {position})"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-
-    if result[0] == 3:
+    print(result)
+    if result[0][0] == 3:
         return True
     else:
         return False
@@ -75,7 +77,10 @@ def get_money(username): #Yutong
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-    return result[0][0]
+    if cursor.rowcount > 0:
+        for row in result:
+            money = row[0]
+    return money
 
 def get_airport_price(position):
     sql = f"select price from board where id = {position}"
@@ -175,6 +180,11 @@ def modify_owner_to_user(position):
     global username
     update = (f"update board set owner = '{username}' where id = {position}")
     cursor = connection.cursor()
+    cursor.execute(update)
+
+def cheat_owner_to_user(username):
+    update = (f"update board set owner = '{username}'")
+    cursor  = connection.cursor()
     cursor.execute(update)
 
 def modify_owner_to_bank(position):
@@ -335,7 +345,6 @@ def upgrade_airport(position): # roberto
         temp_money = get_money(username) - 75% temp_price
     modify_money(temp_money)
     print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
-    pass
 
 def chance_card(position): # yutong
     card_id = random.randint(1, 10)
@@ -461,6 +470,8 @@ while rounds <= 20:
                 modify_money(moneynumber)
             elif command == "jail":
                 jailed = True
+            elif command == "own_all":
+                cheat_owner_to_user(username)
         print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
             doubles += 1
@@ -497,6 +508,7 @@ while rounds <= 20:
             owner = check_airport_owner(position)
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
+                upgrade_choice = check_owns_all_of_country(position)
                 if temp_money < airport_price:
                     print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can sell this airport. Do you want to sell? (Y/N)')
                     userinput = input(f'{col.BOLD}{col.YELLOW}').upper()
@@ -512,14 +524,14 @@ while rounds <= 20:
                     if upgrade_choice == True:
                         upgrade_level = get_upgrade_status(position)
                         if upgrade_level < 3:
-                            print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can upgrade this airport. Do you want to upgrade? (y/n)')
+                            print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can upgrade or sell this airport. Press enter to skip. (sell/upgrade)')
                             userinput = input().lower()
-                            if userinput == 'y':
+                            if input == 'upgrade':
                                 upgrade_airport(position)
-                            elif userinput == 'n':
-                                print(f'You choose not to upgrade the airport. You will pass.')
+                            elif input == 'sell':
+                               sell_airport(position)
                             else:
-                                print(f'{col.BOLD}{col.RED}Invalid input{col.END}')
+                                pass
                         elif upgrade_level >= 3:
                             print(f"You have upgraded {airport_name} to it's max upgrade level - 3. You can not upgrade it anymore. You will pass.")
                     elif upgrade_choice == False:
