@@ -19,6 +19,7 @@ connection = mysql.connector.connect(
 connectedtime = time.time()
 print(f'Connected to the database in {connectedtime - connectionstart} seconds.')
 
+
 # reset board
 def reset_board():
         sql = f"update board set owner = NULL, upgrade_status = 0;"
