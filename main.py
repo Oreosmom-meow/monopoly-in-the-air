@@ -297,6 +297,7 @@ def sell_airport(position): # roberto
             temp_level = upgrade_level - 1
             modify_airport_status(position, temp_level)
             print(f'You have downgraded this airport from {upgrade_level} to {temp_level} and you currently have ${temp_money}')
+            print(get_money(username))
         elif userinput == 'Y' or 'y' and upgrade_level == 2:
             temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.5)
             modify_money(temp_money)
@@ -322,7 +323,7 @@ def sell_airport(position): # roberto
 
 
 def upgrade_airport(position): # roberto
-    global username, temp_money
+    global username
     #   get_airport_price(position)
     get_upgrade_status(position)
     temp_price = get_airport_price(position)
