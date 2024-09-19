@@ -610,8 +610,6 @@ while rounds <= 20:
                             print(f"You have upgraded {airport_name} to it's max upgrade level - 3. You can not upgrade it anymore. You will pass.") '''
 
 
-
-
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
