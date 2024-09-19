@@ -1,5 +1,4 @@
 import random
-from http.cookiejar import cut_port_re
 
 import mysql.connector
 from mysql.connector import cursor
@@ -56,11 +55,22 @@ def check_owns_all_of_country(position):
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-    print(result)
     if result[0][0] == 3:
         return True
     else:
         return False
+
+def get_airport_number_of_one_country(position):
+    global username
+    sql = f"select count(owner) from board where country in ( select country from board where id = {position})"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            number = row[0]
+    return number
+
 
 def get_owner(position): # Yutong
     sql = f"select owner from board where id = {position}"
@@ -297,7 +307,8 @@ def buy_airport(position): #yutong
 def sell_airport(position): # roberto
     global username
     temp_money = get_money(username)
-    if get_owner(position) == 'username':
+    print("x")
+    if get_owner(position) == str(username):
         upgrade_level = get_upgrade_status(position)
         print(f'You own this airport, it is upgrade level: {upgrade_level}. Do you want to sell it? (Y/n)')
         userinput = input()
@@ -337,14 +348,18 @@ def upgrade_airport(position): # roberto
     #   get_airport_price(position)
     get_upgrade_status(position)
     temp_price = get_airport_price(position)
-    if upgrade_level == 1:
+    if upgrade_level == 0:
         temp_money = get_money(username) - 25% temp_price
+        modify_money(temp_money)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
     elif upgrade_level == 1:
         temp_money = get_money(username) - 50% temp_price
-    elif upgrade_level == 1:
+        modify_money(temp_money)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+    elif upgrade_level == 2:
         temp_money = get_money(username) - 75% temp_price
-    modify_money(temp_money)
-    print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
+        modify_money(temp_money)
+        print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name}. You current money is {temp_money}. {col.END}')
 
 def chance_card(position): # yutong
     card_id = random.randint(1, 10)
@@ -472,6 +487,9 @@ while rounds <= 20:
                 jailed = True
             elif command == "own_all":
                 cheat_owner_to_user(username)
+            elif command == "almighty":
+                modify_money(5000)
+                cheat_owner_to_user(username)
         print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
             doubles += 1
@@ -520,24 +538,23 @@ while rounds <= 20:
                     else:
                         print(f'{col.BOLD}{col.RED}Invalid input{col.END}')
                 elif temp_money >= airport_price:
-                    upgrade_choice = check_owns_all_of_country(position)
-                    if upgrade_choice == True:
+                    airport_number = get_airport_number_of_one_country(position)
+                    country = get_country_name(position)
+                    if airport_number < 3:
+                        input(f"You own {airport_name} in {country}. You need to own all the airport in this country first. Game continues .")
+                    elif airport_number == 3:
                         upgrade_level = get_upgrade_status(position)
                         if upgrade_level < 3:
                             print(f'You own {airport_name}. The level is {upgrade_level}. You have ${temp_money}. You can upgrade or sell this airport. Press enter to skip. (sell/upgrade)')
                             userinput = input().lower()
-                            if input == 'upgrade':
+                            if userinput == 'upgrade':
                                 upgrade_airport(position)
-                            elif input == 'sell':
-                               sell_airport(position)
+                            elif userinput == 'sell':
+                                sell_airport(position)
                             else:
                                 pass
                         elif upgrade_level >= 3:
                             print(f"You have upgraded {airport_name} to it's max upgrade level - 3. You can not upgrade it anymore. You will pass.")
-                    elif upgrade_choice == False:
-                        print(f"{col.BOLD}{col.RED}You haven't owned all the airport in this country yet. You need to own all the airport in this country first.{col.END}")
-                else:
-                    pass
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
