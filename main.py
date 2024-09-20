@@ -24,6 +24,10 @@ def reset_board():
         cursor = connection.cursor()
         cursor.execute(sql)
 reset_board()
+def reset_game():
+    sql = f"update game set out_of_jail_card = 0;"
+    cursor = connection.cursor()
+    cursor.execute(sql)
 # classes
 class col:
     PINK = '\033[95m'
@@ -165,9 +169,7 @@ def check_jail_card(username):
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            card_number = row[0]
+    card_number = result[0][0]
     return card_number
 
 def get_upgraded_airport_number(username):
@@ -252,11 +254,14 @@ def jail_event(): # iida
 
     dice_roll_1 = dice_roll()
     dice_roll_2 = dice_roll()
+    jailcard = check_jail_card(username)
 
     choosing = True
     print(f'{col.BOLD}{col.YELLOW}You are in jail.', f'{col.END}')
     print(f'{col.BOLD}{col.YELLOW}Type "1" to roll the dice and get doubles to get out. You have {3 - jail_counter} rolls left until automatic release.', f'{col.END}')
-    print(f'{col.BOLD}{col.YELLOW}Type "2" to pay a fine of 200 to get out.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Type "2" to pay a fine of 200 to get out. You currently have {money}.', f'{col.END}')
+    if money <= 200:
+        print(f'{col.BOLD}{col.RED}Paying the fine would lead you to bankruptcy.', f'{col.END}')
     print(f'{col.BOLD}{col.YELLOW}Type "3" to use a get out of jail free card to get out.', f'{col.END}')
     while choosing == True:
         choice = input('Enter your choice: ')
@@ -277,13 +282,16 @@ def jail_event(): # iida
             jail_counter = 0
     elif choice == '2':
         money -= 200
+        modify_money(money)
         jailed = False
         jail_counter = 0
     else:
-        if check_jail_card(username) > 0:
+        if jailcard > 0:
             print('bee(the insect) free!')
             jailed = False
             jail_counter = 0
+            jailcard -= 1
+            modify_out_of_jail_card(jailcard)
         else:
             print("nuh uh")
 
@@ -469,6 +477,10 @@ while rounds <= 20:
         jail_counter = 0
     if jailed:
         jail_event()
+        money = get_money(username)
+        if money <= 0:
+            print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
+            break
     if not jailed:
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
