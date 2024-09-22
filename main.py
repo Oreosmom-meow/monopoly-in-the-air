@@ -575,7 +575,6 @@ while rounds <= 20:
                     pass
 
 
-
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
