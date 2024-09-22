@@ -453,7 +453,7 @@ def set_board_airports():
     airportnumbers = (2,4,5,7,8,10,13,15,16,19,20,21)
     i = 0
     start = time.time()
-    sql = f"with random_countries as ( select distinct c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3;"
+    sql = f"with random_countries as ( select distinct c.name, c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3";
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
