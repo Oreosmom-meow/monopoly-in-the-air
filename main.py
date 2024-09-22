@@ -51,6 +51,20 @@ username = ''
 #sql related functions
 #def get_country_from_id
 
+
+def get_random_countries():
+    sql = f"select distinct c.name as country_name, c.iso_country from country c where ( select count(*) from airport a where  a.iso_country = c.iso_country) >= 3 order by rand() limit 4 ;"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+def get_random_airports():
+    sql = f"select name, iso_country, row_number() over (partition by iso_country order by rand()) as rn from airport limit 3;"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+
+
 def check_owns_all_of_country(position):
     global username
     sql = f"select count(owner) from board where country in ( select country from board where id = {position})"
