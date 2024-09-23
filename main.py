@@ -87,7 +87,6 @@ def get_airport_number_of_one_country(position):
             number = row[0]
     return number
 
-
 def get_owner(position): # Yutong
     sql = f"select owner from board where id = {position}"
     cursor = connection.cursor()
