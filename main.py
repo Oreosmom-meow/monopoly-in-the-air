@@ -583,7 +583,7 @@ while rounds <= 20:
                 user_choice = input(f'Enter your choice: "s" for sell, "u" for upgrade, Enter to skip: ')
                 if user_choice.lower() == "u":
                     upgrade_airport(position)
-                elif user_choice.lower() == "s" or "S":
+                elif user_choice.lower() == "s":
                     sell_airport(position)
                 else:
                     pass
@@ -606,7 +606,7 @@ while rounds <= 20:
                         temp_money = get_money(username)
                         print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. You currently have ${temp_money} after purchase. Game continues. ')
                 else:
-                    print("Your money can't afford this airport yet. You will continue the game.")
+                    print("You can't afford this airport yet. You will continue the game.")
 
         elif temp_type_id == 2 and jailed == False:
             print(f'You have landed on chance cell. You will randomly select a card from the deck. Press any key to continue.')
