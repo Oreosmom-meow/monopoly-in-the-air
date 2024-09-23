@@ -99,6 +99,7 @@ def get_owner(position): # Yutong
             owner = row[0]
     return owner
 
+
 def get_money(username): #Yutong
     sql = f"select money from game where user_name = '{username}'"
     cursor = connection.cursor()
