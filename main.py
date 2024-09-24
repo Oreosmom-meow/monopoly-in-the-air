@@ -18,16 +18,6 @@ connection = mysql.connector.connect(
 connectedtime = time.time()
 print(f'Connected to the database in {connectedtime - connectionstart} seconds.')
 
-# reset board
-def reset_board():
-        sql = f"update board set owner = NULL, upgrade_status = 0;"
-        cursor = connection.cursor()
-        cursor.execute(sql)
-reset_board()
-def reset_game():
-    sql = f"update game set out_of_jail_card = 0;"
-    cursor = connection.cursor()
-    cursor.execute(sql)
 # classes
 class col:
     PINK = '\033[95m'
@@ -42,25 +32,21 @@ class col:
 
 # global variables
 rounds = 1
-position = 1
 doubles = 0
 jail_counter = 0
 jailed = False
-username = ''
-
-
 
 #sql related functions
 #def get_country_from_id
 
 
-def get_random_countries():
+def get_random_countries(): # will be reformatted for sessions
     sql = f"select distinct c.name as country_name, c.iso_country from country c where ( select count(*) from airport a where  a.iso_country = c.iso_country) >= 3 order by rand() limit 4 ;"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
 
-def get_random_airports():
+def get_random_airports(): # needs to be rewritten to use random countries above, also use sessions
     sql = f"select name, iso_country, row_number() over (partition by iso_country order by rand()) as rn from airport limit 3;"
     cursor = connection.cursor()
     cursor.execute(sql)
