@@ -38,6 +38,51 @@ jailed = False
 
 #sql related functions
 #def get_country_from_id
+gamestart = time.time()
+# set up username
+while True:
+    username = input('Enter your username: ')
+    if username == '':
+        print('Username cannot be empty.')
+    elif username == 'bank':
+        print('Username cannot be "bank"')
+    else:
+        sql = f"INSERT INTO game_sessions(player_name, money, out_of_jail_card, start_time) VALUES ('{username}', 200, 0, {gamestart});"
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        sql2= f'SELECT MAX(session_id) from game_sessions;'
+        cursor = connection.cursor()
+        cursor.execute(sql2)
+        result = cursor.fetchall()
+        session_id = result[0][0]
+        break
+print(f'Username confirmed as {username}, session id = {session_id}')
+# set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ 
+def set_board_airports():
+    airportnumbers = (2,4,5,7,8,10,13,15,16,19,20,21)
+    airports = []
+    i = 0
+    start = time.time()
+    country_sql = f'SELECT DISTINCT iso_country FROM airport GROUP BY iso_country HAVING COUNT(*) >= 3 ORDER BY RAND() LIMIT 4;'
+    cursor = connection.cursor()
+    cursor.execute(country_sql)
+    country_result = cursor.fetchall()
+    for row in country_result:
+        airport_sql = f'SELECT DISTINCT ident FROM airport WHERE iso_country = "{row[0]}" ORDER BY RAND() LIMIT 3;'
+        cursor = connection.cursor()
+        cursor.execute(airport_sql)
+        airport_result = cursor.fetchall()
+        airports.append(airport_result)
+    for row in country_result:
+        sql = f'INSERT INTO session_airp_count set airport_id = "{airports[i]}", country_id = "{row[0]}" where board.id = "{airportnumbers[i]} and session_id = {session_id}";'
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        i += 1
+    end = time.time()
+    print(f"Game database set up in {end - start} seconds.")
+    return
+
+
 
 
 def get_random_countries(): # will be reformatted for sessions
@@ -453,46 +498,11 @@ def board_location(position): # iida
 
 
 # GAME START FUNCTION RUNNING
-# set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ 
-def set_board_airports():
-    airportnumbers = (2,4,5,7,8,10,13,15,16,19,20,21)
-    i = 0
-    start = time.time()
-    sql = f"with random_countries as ( select distinct c.name, c.iso_country from country c where (select count(*) from airport a where a.iso_country = c.iso_country) >= 3 order by rand() limit 4), random_airports as ( select a.name, a.iso_country, row_number() over (partition by a.iso_country order by rand()) as rn from airport a join random_countries rc on a.iso_country = rc.iso_country) select name, iso_country from random_airports where rn <= 3";
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    for row in result:
-        sql = f'update board set board.airport_name = "{row[0]}", board.country = "{row[1]}" where board.id = "{airportnumbers[i]}";'
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        i += 1
-    end = time.time()
-    print(f"Game database set up in {end - start} seconds.")
-    return
-t1 = threading.Thread(target=set_board_airports)
-t1.start()
-# set up username
-while True:
-    username = input('Enter your username: ')
-    if username == '':
-        print('Username cannot be empty.')
-    elif username == 'bank':
-        print('Username cannot be "bank"')
-    else:
-        t1.join()
-        sql = f"update game set user_name = '{username}';"
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        break
-print(f'Username confirmed as {username}')
+
 # set bank owner here !!
 
-# set starting money
-modify_money(150)
 
 # MAIN FUNCTION
-gamestart = time.time()
 while rounds <= 20:
     money = get_money(username)
     if money <= 0:
