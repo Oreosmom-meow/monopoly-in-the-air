@@ -60,7 +60,6 @@ print(f'Username confirmed as {username}, session id = {session_id}')
 # set board airports (˶˃ ᵕ ˂˶) .ᐟ.ᐟ 
 def set_board_airports():
     airportnumbers = (2,4,5,7,8,10,13,15,16,19,20,21)
-    airports = []
     i = 0
     start = time.time()
     country_sql = f'SELECT DISTINCT iso_country FROM airport GROUP BY iso_country HAVING COUNT(*) >= 3 ORDER BY RAND() LIMIT 4;'
@@ -72,16 +71,15 @@ def set_board_airports():
         cursor = connection.cursor()
         cursor.execute(airport_sql)
         airport_result = cursor.fetchall()
-        airports.append(airport_result)
-    for row in country_result:
-        sql = f'INSERT INTO session_airp_count set airport_id = "{airports[i]}", country_id = "{row[0]}" where board.id = "{airportnumbers[i]} and session_id = {session_id}";'
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        i += 1
+        for airport in airport_result:
+            sql = f'INSERT INTO session_airp_count (airport_id, country_id, session_id, board_id) VALUES ("{airport[0]}", "{row[0]}", {session_id}, {airportnumbers[i]});'
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            i += 1
     end = time.time()
     print(f"Game database set up in {end - start} seconds.")
     return
-
+set_board_airports()
 
 
 
