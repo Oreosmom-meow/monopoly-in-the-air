@@ -96,6 +96,7 @@ def get_random_airports(): # needs to be rewritten to use random countries above
     result = cursor.fetchall()
 
 
+#Roberto writes this, I don't wanna fix
 def check_owns_all_of_country(position):
     global username
     sql = f"select count(owner) from board where country in ( select country from board where id = {position})"
@@ -118,8 +119,29 @@ def get_airport_number_of_one_country(position):
             number = row[0]
     return number
 
+#Get airport and country names
+def get_country_name(position):
+    sql = f"select name from country join session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            country_name = row[0]
+    return country_name
+
+def get_airport_name(position):
+    sql = f"select name from airport join session_airp_count on ident = airport_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            airport_name = row[0]
+    return airport_name
+
 def get_owner(position): # Yutong
-    sql = f"select owner from board where id = {position}"
+    sql = f"select ownership from player_property where board_id = {position} and session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -128,9 +150,8 @@ def get_owner(position): # Yutong
             owner = row[0]
     return owner
 
-
-def get_money(username): #Yutong
-    sql = f"select money from game where user_name = '{username}'"
+def get_money(session_id): #Yutong
+    sql = f"select money from game_sessions where session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -140,7 +161,7 @@ def get_money(username): #Yutong
     return money
 
 def get_airport_price(position):
-    sql = f"select price from board where id = {position}"
+    sql = f"select price from board where board_id = {position}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -148,26 +169,6 @@ def get_airport_price(position):
         for row in result:
             price = row[0]
     return price
-
-def get_airport_name(position):
-    sql = f"select airport_name from board where id = {position}"
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            airport_name = row[0]
-    return airport_name
-
-def get_country_name(position):
-    sql = f"select country from board where id = {position}"
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            country_name = row[0]
-    return country_name
 
 def get_type_id(position):
     sql = f"select type_id from board where id = {position}"
@@ -179,8 +180,8 @@ def get_type_id(position):
             type_id = row[0]
     return type_id
 
-def get_all_owned_airport(username):
-    sql = f"select COUNT(owner) from board where owner = '{username}'"
+def get_all_owned_airport(session_id):
+    sql = f"select COUNT(ownership) from player_property where session_id = {session_id}"
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
@@ -188,8 +189,17 @@ def get_all_owned_airport(username):
             airport_number = row[0]
     return airport_number
 
+def get_upgraded_airport_number(username):
+    sql = f"select COUNT(ownership) from player_property where session_id = {session_id} and upgrade_status > 0"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            upgrade_number = row[0]
+    return upgrade_number
+
 def get_upgrade_status(position):
-    sql = f"select upgrade_status from board where id = {position} "
+    sql = f"select upgrade_status from player_property where sesseion_id = {session_id} and board_id = {position} "
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -199,7 +209,7 @@ def get_upgrade_status(position):
     return upgrade_status
 
 def check_airport_owner(position):
-    sql = f"select owner from board where id = {position}"
+    sql = f"select ownership from player_property where board_id = {position} and session_id = {session_id}"
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
@@ -207,61 +217,52 @@ def check_airport_owner(position):
             airport_owner = row[0]
     return airport_owner
 
-def check_jail_card(username):
-    sql = f"select out_of_jail_card from game where user_name = '{username}'"
+def check_jail_card(session_id):
+    sql = f"select out_of_jail_card from game_sessions where session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
     card_number = result[0][0]
     return card_number
 
-def get_upgraded_airport_number(username):
-    sql = f"SELECT COUNT(owner) from board WHERE owner = '{username}' AND upgrade_status > 0"
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            upgrade_number = row[0]
-    return upgrade_number
-
 def modify_money(temp_money):
     global username
-    update = f"update game set money = {temp_money} where user_name = '{username}'"
+    update = f"update game_sessions set money = {temp_money} where session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(update)
-    get_money(username)
+    get_money(session_id)
 
 def modify_owner_to_user(position):
     global username
-    update = (f"update board set owner = '{username}' where id = {position}")
+    update = (f"update player_property set ownership = '{username}' where board_id = {position} and session_id = {session_id}")
     cursor = connection.cursor()
     cursor.execute(update)
 
 def cheat_owner_to_user(username):
-    update = (f"update board set owner = '{username}'")
+    update = (f"update player_property set ownership = '{username}' and session_id = {session_id}")
     cursor  = connection.cursor()
     cursor.execute(update)
 
 def modify_owner_to_bank(position):
     global username
-    update = (f"update board set owner = 'bank' where id = {position}")
+    update = (f"update player_property set ownership = 'bank' where id = {position} and session_id = {session_id}")
     cursor = connection.cursor()
     cursor.execute(update)
 
 def modify_out_of_jail_card(jail_card):
     global username
-    sql = f"update game set out_of_jail_card = '{jail_card}' where user_name = '{username}'"
+    sql = f"update game_sessions set out_of_jail_card = '{jail_card}' where session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
 
 def modify_airport_status(position, temp_status):
     global username
-    sql = f"update board set upgrade_status = {temp_status} where id = {position}"
+    sql = f"update player_property set upgrade_status = {temp_status} where id = {position} and session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
 
 def board_location(position): # iida
-    sql = f'select * from board where id = "{position}"'
+    sql = f'select * from board where board_id = "{position}"'
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -274,7 +275,7 @@ def dice_roll(): # iida
 
 def income_tax(): # iida
     global username
-    money = get_money(username)
+    money = get_money(session_id)
     temp_money = money
     money -= round(50 + money * 0.25)
     modify_money(money)
@@ -282,7 +283,7 @@ def income_tax(): # iida
 
 def luxury_tax(): # iida
     global username
-    money = get_money(username)
+    money = get_money(session_id)
     temp_money = money
     money -= round(100 + money * 0.5)
     modify_money(money)
@@ -293,7 +294,7 @@ def jail_event(): # iida
     global jailed
     global username
     global rounds
-    money = get_money(username)
+    money = get_money(session_id)
 
     dice_roll_1 = dice_roll()
     dice_roll_2 = dice_roll()
@@ -340,7 +341,7 @@ def jail_event(): # iida
 
 def salary(): # iida
     global username
-    money = get_money(username)
+    money = get_money(session_id)
     temp_money = money
     temp_money += 200 + 1 #property values
     modify_money(temp_money)
@@ -349,7 +350,7 @@ def salary(): # iida
 def buy_airport(position): #yutong
     global username
     temp_price = get_airport_price(position)
-    temp_money = get_money(username) - temp_price
+    temp_money = get_money(session_id) - temp_price
     modify_money(temp_money)
     modify_owner_to_user(position)
 
@@ -357,7 +358,7 @@ def buy_airport(position): #yutong
 
 def sell_airport(position): # roberto
     global username
-    temp_money = get_money(username)
+    temp_money = get_money(session_id)
     upgrade_level = get_upgrade_status(position)
     if upgrade_level == 3:
         temp_money = temp_money + (get_airport_price(position) * 0.5 * 0.75)
@@ -385,7 +386,7 @@ def sell_airport(position): # roberto
         pass
 
 def get_sell_price(position):
-    temp_money = get_money(username)
+    temp_money = get_money(session_id)
     if upgrade_level == 0:
         temp_money = (get_airport_price(position) * 0.5)
         #print(f'Selling this airport will get you ${temp_money}')
@@ -405,19 +406,19 @@ def upgrade_airport(position): # roberto
     get_upgrade_status(position)
     temp_price = get_airport_price(position)
     if upgrade_level == 0:
-        temp_money = get_money(username) - 25% temp_price
+        temp_money = get_money(session_id) - 25% temp_price
         modify_money(temp_money)
         temp_level = upgrade_level + 1
         modify_airport_status(position, temp_level)
         print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name} to level {get_upgrade_status(position)}. You currently have ${temp_money}. {col.END}')
     elif upgrade_level == 1:
-        temp_money = get_money(username) - 50% temp_price
+        temp_money = get_money(session_id) - 50% temp_price
         modify_money(temp_money)
         temp_level = upgrade_level + 1
         modify_airport_status(position, temp_level)
         print(f'{col.BOLD}{col.GREEN}You have successfully upgraded {airport_name} to level {get_upgrade_status(position)}. You currently have ${temp_money}. {col.END}')
     elif upgrade_level == 2:
-        temp_money = get_money(username) - 75% temp_price
+        temp_money = get_money(session_id) - 75% temp_price
         modify_money(temp_money)
         temp_level = upgrade_level + 1
         modify_airport_status(position, temp_level)
@@ -442,7 +443,7 @@ def price_to_upgrade(position):
 
 def chance_card(position): # yutong
     card_id = random.randint(1, 10)
-    temp_money = get_money(username)
+    temp_money = get_money(session_id)
     if card_id == 1:
         print(f'You picked card: Advance to "Go". You will get $200. Congratulations.')
         salary()
@@ -465,23 +466,23 @@ def chance_card(position): # yutong
         print(f'You picked card: Pay repair fee for all properties. You need to pay $25 for all airports you own, $50 for all the upgraded airports you own. You need to pay in toal ${punishment}. You now have ${temp_money}. ')
         modify_money(temp_money)
     elif card_id == 6:
-        temp_money = get_money(username) - 50
+        temp_money = get_money(session_id) - 50
         print(f'You picked card: Doctor fee. You need to pay $50 to the doctor.You now have ${temp_money}.')
         modify_money(temp_money)
     elif card_id == 7:
-        temp_money = get_money(username) + 50
+        temp_money = get_money(session_id) + 50
         print(f'You picked card: Grand opening night. You will get $50 from the bank. Congratulations. You now have ${temp_money}.')
         modify_money(temp_money)
     elif card_id == 8:
-        temp_money = get_money(username) - 50
+        temp_money = get_money(session_id) - 50
         print(f'You picked card: School fee. You need to pay $50 to the school. You now have ${temp_money}.')
         modify_money(temp_money)
     elif card_id == 9:
-        temp_money = get_money(username) + 25
+        temp_money = get_money(session_id) + 25
         print(f'You picked card: Receive consultancy fee. You will get $25 from the bank. Congratulations.You now have ${temp_money}.')
         modify_money(temp_money)
     elif card_id == 10:
-        temp_money = get_money(username) - 50
+        temp_money = get_money(session_id) - 50
         print(f'You picked card: Elected as chairman of the board. You need to pay $50 to the bank.You now have ${temp_money}.')
         modify_money(temp_money)
 
@@ -502,7 +503,7 @@ def board_location(position): # iida
 
 # MAIN FUNCTION
 while rounds <= 20:
-    money = get_money(username)
+    money = get_money(session_id)
     if money <= 0:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
         break
@@ -513,7 +514,7 @@ while rounds <= 20:
         jail_counter = 0
     if jailed:
         jail_event()
-        money = get_money(username)
+        money = get_money(session_id)
         if money <= 0:
             print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
             break
@@ -555,7 +556,7 @@ while rounds <= 20:
             position = position - 21
         print('You are at:', position)
         temp_type_id = get_type_id(position)
-        temp_money = get_money(username)
+        temp_money = get_money(session_id)
         airport_price = get_airport_price(position)
         airport_name = get_airport_name(position)
         country_name = get_country_name(position)
@@ -606,7 +607,7 @@ while rounds <= 20:
                         pass
                     elif userinput == 'Y':
                         buy_airport(position)
-                        temp_money = get_money(username)
+                        temp_money = get_money(session_id)
                         print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. You currently have ${temp_money} after purchase. Game continues. ')
                 else:
                     print("You can't afford this airport yet. You will continue the game.")
@@ -635,9 +636,9 @@ while rounds <= 20:
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
-    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{get_money(username):.0f}')
+    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{get_money(session_id):.0f}')
     print(f"You finished the game in {round(time.time() - gamestart)} seconds")
-    score = round(get_money(username) * 0.75 * 10)
+    score = round(get_money(session_id) * 0.75 * 10)
     print(f'{col.BOLD}{col.GREEN}Your score is:', score, f'{col.END}')
     cursor = connection.cursor()
     fetchscoresql = f'select MAX(SCORE) from high_score;'
