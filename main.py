@@ -87,12 +87,12 @@ def set_player_property(session_id):
     airportnumbers = (2, 4, 5, 7, 8, 10, 13, 15, 16, 19, 20, 21)
     i = 0
     for x in airportnumbers:
-        insert = f"INSERT INTO player_property (session_id, board_id, ownership, upgrade_status) values ({session_id}, {airportnumbers[i]}, '{username}', 0);"
+        insert = f"INSERT INTO player_property (session_id, board_id, ownership, upgrade_status) values ({session_id}, {airportnumbers[i]}, NULL, 0);"
         cursor = connection.cursor()
         cursor.execute(insert)
         i += 1
     random_airport = random.choice(airportnumbers)
-    select_country = f"select board_id from session_airp_count where country_id in (select country_id from session_airp_count where board_id = {random_airport});"
+    select_country = f"select board_id from session_airp_count where country_id in (select country_id from session_airp_count where board_id = {random_airport}) and session_id = {session_id};"
     cursor = connection.cursor()
     cursor.execute(select_country)
     country_result = cursor.fetchall()
@@ -106,8 +106,7 @@ set_player_property(session_id)
 
 #Roberto writes this, I don't wanna fix
 def check_owns_all_of_country(position):
-    global username
-    sql = f"select count(ownership) from player_property where country_id in ( select country_id from session_airp_count where board_id = {position})"
+    sql = f"select count(ownership) from player_property where country_id in ( select country_id from session_airp_count where board_id = {position} and session_id = {session_id})"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -134,7 +133,7 @@ def clear_tables(session_id):
     cursor = connection.cursor()
     cursor.execute(sql1)
     cursor.execute(sql2)
-    print(f"Successfully deleted {session_id} tables.")
+    print(f"Successfully deleted session:{session_id} tables.")
 
 #Get airport and country names
 def get_country_name(position):
@@ -148,8 +147,6 @@ def get_country_name(position):
     return country_name
 
 def get_airport_name(position):
-    print(session_id)
-    print(position)
     sql = f"select name from airport join session_airp_count on ident = airport_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
     cursor = connection.cursor()
     cursor.execute(sql)
@@ -225,7 +222,6 @@ def check_airport_owner(position):
     if cursor.rowcount > 0:
         for row in result:
             airport_owner = row[0]
-            print(airport_owner)
     return airport_owner
 
 def check_jail_card(session_id):
@@ -250,7 +246,7 @@ def modify_owner_to_user(position):
     cursor.execute(update)
 
 def cheat_owner_to_user(username):
-    update = (f"update player_property set ownership = '{username}' and session_id = {session_id}")
+    update = (f"update player_property set ownership = '{username}' where session_id = {session_id}")
     cursor  = connection.cursor()
     cursor.execute(update)
 
@@ -359,7 +355,6 @@ def salary(): # iida
     print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{temp_money - money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
 
 def buy_airport(position): #yutong
-    global username
     temp_price = get_airport_price(position)
     temp_money = get_money(session_id) - temp_price
     modify_money(temp_money)
@@ -569,6 +564,7 @@ while rounds <= 20:
         print('You are at:', position)
         temp_type_id = get_type_id(position)
         temp_money = get_money(session_id)
+        #Non-airport cells
         if temp_type_id == 0 and jailed == False:
             if position == 1 and rounds != 1:
                 print(f'You have landed on Go cell. You will get $200 from the bank. You currently have ${temp_money}')
@@ -577,14 +573,15 @@ while rounds <= 20:
             elif position == 12:
                 print(f'You have landed on Free Parking cell. You will pass.')
             elif position == 17:
-                #I don't know what to put here
                 print(f'You have landed on Jail. You will pass.')
+        #airport cell
         elif temp_type_id == 1 and jailed == False:
             airport_price = get_airport_price(position)
             country_name = get_country_name(position)
             airport_name = get_airport_name(position)
             input(f'You have landed on {airport_name} from {country_name}. The airport price is ${airport_price}. You currently have ${temp_money}. Press any key to continue.')
             owner = check_airport_owner(position)
+            #first check the owner of the airport
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
@@ -603,8 +600,6 @@ while rounds <= 20:
                     sell_airport(position)
                 else:
                     pass
-
-
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
@@ -613,14 +608,14 @@ while rounds <= 20:
             else:
                 if temp_money > airport_price:
                     print(f'{airport_name} is available for purchase. The price is ${airport_price}. Do you want to buy it? (Y/N)')
-                    userinput = input().upper()
-                    if userinput == 'N':
-                        print("You choose to pass this airport without buying. Game continue.")
-                        pass
-                    elif userinput == 'Y':
+                    userinput = input()
+                    print(userinput)
+                    if userinput == 'Y' or 'y':
                         buy_airport(position)
                         temp_money = get_money(session_id)
                         print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. You currently have ${temp_money} after purchase. Game continues. ')
+                    elif userinput == 'N' or 'n':
+                        print("You choose to pass this airport without buying. Game continue.")
                 else:
                     print("You can't afford this airport yet. You will continue the game.")
 
@@ -657,11 +652,12 @@ if rounds > 20:
     fetchscoresql = f'select MAX(SCORE) from high_score;'
     cursor.execute(fetchscoresql)
     currenthighscore = cursor.fetchall()
-    highscoresql = f'insert into high_score (user_name, score) values ("{username}",{score});'
+    highscoresql = f'insert into high_score (session_id, score) values ({session_id},{score});'
     cursor.execute(highscoresql)
     if score > currenthighscore[0][0]:
         print(f'{col.BOLD}{col.YELLOW}🜲  {col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
-    scoreboardsql = f'select user_name as USERNAME, SCORE from high_score ORDER BY score DESC LIMIT 5'
+    #I really don't know how to fix this. SQL doesn't allow me to do order by in subqueries
+    scoreboardsql = f'select player_name as USERNAME from game_sessions where session_id in (select session_id from high_score order by score DESC limit 5);'
     cursor.execute(scoreboardsql)
     scoreboard = cursor.fetchall()
     index = 0
