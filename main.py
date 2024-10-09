@@ -13,6 +13,7 @@ connection = mysql.connector.connect(
     host="mysql.metropolia.fi",
     port=3306,
     database="yutongd",
+    connection_timeout=60,
     autocommit = True
 )
 connectedtime = time.time()
@@ -197,7 +198,7 @@ def get_type_id(position):
     return type_id
 
 def get_all_owned_airport(session_id):
-    sql = f"select COUNT(ownership) from player_property where session_id = {session_id}"
+    sql = f"select COUNT(ownership) from player_property where session_id = {session_id} and ownership = '{username}';"
     cursor.execute(sql)
     result = cursor.fetchall()
     if cursor.rowcount > 0:
@@ -275,12 +276,32 @@ def modify_airport_status(position, temp_status):
     cursor = connection.cursor()
     cursor.execute(sql)
 
-def board_location(position): # iida
-    sql = f'select * from board where board_id = "{position}"'
+def insert_high_score(session_id, score):
+    sql = f"INSERT INTO high_score(session_id, score) VALUES ({session_id}, {score});)"
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+def get_top_high_score(session_id):
+    session_list = []
+    player_name = []
+    high_score = []
+    if not connection.is_connected():
+        connection.reconnect(attempts=3, delay=5)
+    sql = f'select session_id,score from high_score ORDER by score DESC limit 5'
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
-    return result[0]
+    for id, score in result:
+        session_list.append(id)
+        high_score.append(score)
+    for i in session_list:
+        sql2 = f'select player_name from game_sessions where session_id = {i};'
+        cursor.execute(sql2)
+        result2 = cursor.fetchall()
+        for name in result2:
+            player_name.append(name[0])
+    return(player_name, high_score,session_list)
+
 
 # functions
 def dice_roll(): # iida
@@ -332,12 +353,11 @@ def jail_event(): # iida
     if choice == '1':
         print(f'Dice result: {dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 != dice_roll_2 and jail_counter < 2:
-            print(jail_counter)
             jail_counter += 1
             rounds += 1
             print(f'{col.BOLD}{col.RED}Failed to roll a double. Still in jail.', f'{col.END}')
         elif dice_roll_1 != dice_roll_2 and jail_counter >= 2:
-            print(f'{col.GREEN}You have been automatically release after 3 attempts. Game continues.{col.END}')
+            print(f'{col.GREEN}You have been automatically released after 3 attempts. Game continues.{col.END}')
             jailed = False
         elif dice_roll_1 == dice_roll_2:
             print(f'{col.BOLD}{col.GREEN}You have been released.' + f'{col.END}')
@@ -361,10 +381,12 @@ def jail_event(): # iida
 
 def salary(): # iida
     money = get_money(session_id)
+    owned_airport = get_all_owned_airport(session_id)
+    upgraded_airport = get_upgraded_airport_number(session_id)
     temp_money = money
-    temp_money += 200 #property values
+    temp_money += 200 + owned_airport * 10 + upgraded_airport * 25
     modify_money(temp_money)
-    print(f'{col.BOLD}{col.BLUE}You passed Go cell. Salary time! You earned:', f'{temp_money - money:.0f}'+ f'{col.END}')
+    print(f'{col.BOLD}{col.BLUE}You passed Go cell. Salary time! You earned:', f'{temp_money - money:.0f}. Because you owned {owned_airport} airports and upgraded {upgraded_airport} airports' + f'{col.END}')
 
 def buy_airport(position): #yutong
     temp_price = get_airport_price(position)
@@ -527,8 +549,6 @@ while rounds <= 20:
     print(f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
     print(f'{col.BOLD}{col.PINK}Round: {rounds} | Position: {position}{col.END}')
     if not jailed:
-        dice_roll_1 = dice_roll()
-        dice_roll_2 = dice_roll()
         country_list, airport_number = get_all_country_name_and_number(session_id)
         jail_card = check_jail_card(session_id)
         length = len(country_list)
@@ -562,6 +582,13 @@ while rounds <= 20:
             elif command == "almighty":
                 modify_money(1000000)
                 cheat_owner_to_user(session_id)
+            elif command == 'end with money':
+                temp_money = random.randint(500,50000)
+                modify_money(temp_money)
+                rounds = 22
+
+        dice_roll_1 = dice_roll()
+        dice_roll_2 = dice_roll()
         if dice_roll_1 == dice_roll_2:
             doubles += 1
             if doubles >= 2:
@@ -572,9 +599,11 @@ while rounds <= 20:
             else:
                 position += dice_roll_1 + dice_roll_2
                 print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
-        else:
+        elif dice_roll_1 != dice_roll_2:
             position += dice_roll_1 + dice_roll_2
             print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
+        else:
+            break
         if position > 22:
             salary()
             rounds += 1
@@ -661,29 +690,23 @@ while rounds <= 20:
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
-    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'{get_money(session_id):.0f}')
+    print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'${get_money(session_id):.0f}')
     print(f"You finished the game in {round(time.time() - gamestart)} seconds")
-    score = round(get_money(session_id) * 0.75 * 10)
+    money = get_money(session_id)
+    airport = get_all_owned_airport(session_id)
+    upgrade_airport = get_upgraded_airport_number(session_id)
+    score = round(money + airport * 5 + upgrade_airport * 10)
+    insert_high_score(session_id, score)
     print(f'{col.BOLD}{col.GREEN}Your score is:', score, f'{col.END}')
-    clear_tables(session_id)
-    cursor = connection.cursor()
-    fetchscoresql = f'select MAX(SCORE) from high_score;'
-    cursor.execute(fetchscoresql)
-    currenthighscore = cursor.fetchall()
-    highscoresql = f'insert into high_score (session_id, score) values ({session_id},{score});'
-    cursor.execute(highscoresql)
-    if score > currenthighscore[0][0]:
-        print(f'{col.BOLD}{col.YELLOW}🜲  {col.GREEN}{col.UNDERLINE}HIGHSCORE' + f'{col.END}')
-    #I really don't know how to fix this. SQL doesn't allow me to do order by in subqueries
-    scoreboardsql = f'select player_name as USERNAME from game_sessions where session_id in (select session_id from high_score order by score DESC limit 5);'
-    cursor.execute(scoreboardsql)
-    scoreboard = cursor.fetchall()
+    top_player, top_score, session_list = get_top_high_score(session_id)
+    if session_id in session_list:
+        rank = session_list.index(session_id) + 1
+        print(f'You ranked {rank} in the top 5 high scores.')
+    elif session_id not in session_list:
+        print(f"You didn't make it to the top 5 high scores.")
     index = 0
-    print('USER | ','SCORE')
-    for row in scoreboard:
-        print(scoreboard[index][0], scoreboard[index][1])
+    print(f'{col.PINK}USER  | {col.END}', f'{col.PINK}SCORE{col.END}')
+    while index < len(top_score):
+        print(f'{top_player[index]}    |  {top_score[index]}')
         index += 1
-    cursor.close()
-    connection.close()
-    # check highest score in table, if score is higher, print
-    # print top 5 scores from table
+    clear_tables(session_id)
