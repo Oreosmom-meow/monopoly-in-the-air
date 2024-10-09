@@ -106,7 +106,7 @@ set_player_property(session_id)
 
 #Roberto writes this, I don't wanna fix
 def check_owns_all_of_country(position):
-    sql = f"select count(ownership) from player_property where country_id in ( select country_id from session_airp_count where board_id = {position} and session_id = {session_id})"
+    sql = f'select count(iso_country) from airport join session_airp_count on iso_country = country_id where session_airp_count.board_id = {position}; '
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -117,7 +117,7 @@ def check_owns_all_of_country(position):
 
 def get_airport_number_of_one_country(position):
     global username
-    sql = f"select count(owner) from board where country in ( select country from board where id = {position})"
+    sql = f'SELECT count(ownership) from player_property join session_airp_count join country on iso_country = country_id where session_airp_count.session_id = player_property.session_id and session_airp_count.board_id = {position} and ownership != "NULL" and ownership != "bank"'
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -264,7 +264,7 @@ def modify_out_of_jail_card(jail_card):
 
 def modify_airport_status(position, temp_status):
     global username
-    sql = f"update player_property set upgrade_status = {temp_status} where id = {position} and session_id = {session_id}"
+    sql = f"update player_property set upgrade_status = {temp_status} where board_id = {position} and session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(sql)
 
