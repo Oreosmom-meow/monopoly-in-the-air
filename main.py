@@ -92,7 +92,7 @@ def set_player_property(session_id):
         cursor.execute(insert)
         i += 1
     random_airport = random.choice(airportnumbers)
-    select_country = f"select board_id from session_airp_count where country_id in (select country_id from session_airp_count where board_id = {random_airport}) and session_id = {session_id};"
+    select_country = f"select board_id from session_airp_count where country_id in (select country_id from session_airp_count where board_id = {random_airport} and session_id = {session_id}) and session_id = {session_id};"
     cursor = connection.cursor()
     cursor.execute(select_country)
     country_result = cursor.fetchall()
@@ -103,8 +103,6 @@ def set_player_property(session_id):
     return
 set_player_property(session_id)
 
-
-#Roberto writes this, I don't wanna fix
 def check_owns_all_of_country(position):
     sql = f'select count(iso_country) from airport join session_airp_count on iso_country = country_id where session_airp_count.board_id = {position}; '
     cursor = connection.cursor()
@@ -115,16 +113,6 @@ def check_owns_all_of_country(position):
     else:
         return False
 
-def get_airport_number_of_one_country(position):
-    sql = f'SELECT count(ownership) from player_property join session_airp_count join country on iso_country = country_id where session_airp_count.session_id = player_property.session_id and session_airp_count.board_id = {position} and ownership != "NULL" and ownership != "bank"'
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    if cursor.rowcount > 0:
-        for row in result:
-            number = row[0]
-    return number
-
 #-------- starting of Yutong's code
 def clear_tables(session_id):
     sql1 = f"DELETE FROM session_airp_count where session_id = {session_id};"
@@ -132,9 +120,8 @@ def clear_tables(session_id):
     cursor = connection.cursor()
     cursor.execute(sql1)
     cursor.execute(sql2)
-    print(f"Successfully deleted session:{session_id} tables.")
+    print(f"Successfully deleted session:{session_id} related redundant tables.")
 
-#Get airport and country names
 def get_country_name(position):
     sql = f"select name from country join session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
     cursor = connection.cursor()
@@ -146,13 +133,19 @@ def get_country_name(position):
     return country_name
 
 def get_all_country_name_and_number(session_id):
-    airportnumbers = (2, 7, 13, 19)
-    i = 0
     country_names = []
     airport_numbers = []
-    for x in airportnumbers:
-        sql1 = f"SELECT name from country JOIN session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {airportnumbers[i]} "
-        sql2 = f"SELECT count(ownership) from player_property join session_airp_count join country on iso_country = country_id where session_airp_count.session_id = player_property.session_id and session_airp_count.board_id = {airportnumbers[i]} and ownership != 'NULL' and ownership != 'bank'"
+    tempo_list = []
+    sql2 = f"SELECT sa.country_id, COUNT(p.board_id) AS airport_count FROM player_property p JOIN session_airp_count sa ON p.board_id = sa.board_id AND p.session_id = sa.session_id WHERE p.session_id = {session_id}  AND p.ownership = '{username}' GROUP BY sa.country_id;"
+    cursor = connection.cursor()
+    cursor.execute(sql2)
+    result2 = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for key, value in result2:
+            tempo_list.append(key)
+            airport_numbers.append(value)
+    for x in tempo_list:
+        sql1 = f"SELECT DISTINCT(name) from country JOIN session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.country_id = '{x}'; "
         cursor = connection.cursor()
         cursor.execute(sql1)
         result1 = cursor.fetchall()
@@ -160,14 +153,6 @@ def get_all_country_name_and_number(session_id):
             for row in result1:
                 name = row[0]
                 country_names.append(name)
-        cursor = connection.cursor()
-        cursor.execute(sql2)
-        result2 = cursor.fetchall()
-        if cursor.rowcount > 0:
-            for row in result2:
-                a_name = row[0]
-                airport_numbers.append(a_name)
-        i += 1
     return (country_names, airport_numbers)
 
 def get_airport_name(position):
@@ -372,7 +357,7 @@ def salary(): # iida
     temp_money = money
     temp_money += 200 #property values
     modify_money(temp_money)
-    print(f'{col.BOLD}{col.BLUE}You passed Go cell. Salary time!\nYou earned:', f'{temp_money - money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
+    print(f'{col.BOLD}{col.BLUE}You passed Go cell. Salary time! You earned:', f'{temp_money - money:.0f}'+ f'{col.END}')
 
 def buy_airport(position): #yutong
     temp_price = get_airport_price(position)
@@ -518,14 +503,7 @@ def board_location(position): # iida
     result = cursor.fetchall()
     return result[0]
 
-
-
-
 # GAME START FUNCTION RUNNING
-
-# set bank owner here !!
-
-
 # MAIN FUNCTION
 while rounds <= 20:
     money = get_money(session_id)
@@ -582,13 +560,15 @@ while rounds <= 20:
             position = position - 21
         print('You are at cell number:', position)
         country_list, airport_number = get_all_country_name_and_number(session_id)
+        length = len(country_list)
         print(f'{col.BOLD}{col.CYAN}Your current money: ${money}{col.END}')
-        print(f'{col.BOLD}{col.CYAN}Your current properties: {col.END}')
-        print(f'{col.BOLD}Country      | Number of airports owned{col.END}')
-        print(f'{country_list[0]}      | {airport_number[0]}')
-        print(f'{country_list[1]}      | {airport_number[1]}')
-        print(f'{country_list[2]}      | {airport_number[2]}')
-        print(f'{country_list[3]}      | {airport_number[3]}' + '\n')
+        if length == 0:
+            print(f"{col.BOLD}{col.CYAN}You don't own any property yet. {col.END}")
+        else:
+            print(f'{col.BOLD}{col.CYAN}Your current properties: {col.END}')
+            print(f'{col.BOLD}Country      | Number of airports owned{col.END}')
+            for i in range(length):
+                print(f'{country_list[i]}      | {airport_number[i]}')
         temp_type_id = get_type_id(position)
         temp_money = get_money(session_id)
         #Non-airport cells
