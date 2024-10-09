@@ -301,7 +301,7 @@ def luxury_tax(): # iida
     temp_money = money
     money -= round(100 + money * 0.5)
     modify_money(money)
-    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid {temp_money - money} in taxes.\nYou have ${money} left.', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid ${temp_money - money} in taxs.\n', f'{col.END}')
 
 def jail_event(): # iida
     global jail_counter
@@ -330,13 +330,17 @@ def jail_event(): # iida
         else:
             choosing = False
     if choice == '1':
-        print(dice_roll_1, dice_roll_2)
-        rounds += 1
-        if dice_roll_1 != dice_roll_2:
+        print(f'Dice result: {dice_roll_1}, {dice_roll_2}')
+        if dice_roll_1 != dice_roll_2 and jail_counter < 2:
+            print(jail_counter)
             jail_counter += 1
-            print(f'{col.BOLD}Failed to roll a double. Still in jail.', f'{col.END}')
-        else:
-            print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
+            rounds += 1
+            print(f'{col.BOLD}{col.RED}Failed to roll a double. Still in jail.', f'{col.END}')
+        elif dice_roll_1 != dice_roll_2 and jail_counter >= 2:
+            print(f'{col.GREEN}You have been automatically release after 3 attempts. Game continues.{col.END}')
+            jailed = False
+        elif dice_roll_1 == dice_roll_2:
+            print(f'{col.BOLD}{col.GREEN}You have been released.' + f'{col.END}')
             jailed = False
             jail_counter = 0
     elif choice == '2':
@@ -526,14 +530,16 @@ while rounds <= 20:
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
         country_list, airport_number = get_all_country_name_and_number(session_id)
+        jail_card = check_jail_card(session_id)
         length = len(country_list)
         print(f'{col.CYAN}---------Player Property---------{col.END}')
-        print(f'{col.BOLD}Your current money💰: {col.CYAN}${money}{col.END}')
+        print(f'{col.BOLD}💰Money: {col.CYAN}${money}{col.END}')
+        print(f'🃏Jail card: {col.CYAN}{jail_card}{col.END}')
         if length == 0:
-            print(f"{col.BOLD}You don't own any property 🛬 yet. {col.END}")
+            print(f"{col.BOLD}🛬Properties:{col.CYAN} 0{col.END} {col.END}")
             print(f'{col.CYAN}--------------------------------{col.END}')
         else:
-            print(f'{col.BOLD}Your current properties: {col.END}')
+            print(f'{col.BOLD}🛬Properties: {col.END}')
             print(f'{col.BOLD}Country      | Number of airports 🛬 owned{col.END}')
             for i in range(length):
                 print(f'{col.CYAN}{country_list[i]}      | {airport_number[i]}{col.END}')
@@ -615,7 +621,7 @@ while rounds <= 20:
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
                 modify_money(temp_money)
-                print(f'Bank owns {col.CYAN}{airport_name}{col.END}and you need to pay rent to the bank at price of {col.CYAN}${rent}{col.END}. You currently have {temp_money} after paying the rent.')
+                print(f'Bank owns {col.CYAN}{airport_name}{col.END} and you need to pay rent to the bank at price of {col.CYAN}${rent}{col.END}. You currently have {temp_money} after paying the rent.')
             else:
                 if temp_money > airport_price:
                     print(f'{airport_name} is available for purchase. Do you want to buy it? (Y/N)')
