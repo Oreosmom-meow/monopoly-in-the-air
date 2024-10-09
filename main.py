@@ -116,7 +116,6 @@ def check_owns_all_of_country(position):
         return False
 
 def get_airport_number_of_one_country(position):
-    global username
     sql = f'SELECT count(ownership) from player_property join session_airp_count join country on iso_country = country_id where session_airp_count.session_id = player_property.session_id and session_airp_count.board_id = {position} and ownership != "NULL" and ownership != "bank"'
     cursor = connection.cursor()
     cursor.execute(sql)
@@ -145,6 +144,31 @@ def get_country_name(position):
         for row in result:
             country_name = row[0]
     return country_name
+
+def get_all_country_name_and_number(session_id):
+    airportnumbers = (2, 7, 13, 19)
+    i = 0
+    country_names = []
+    airport_numbers = []
+    for x in airportnumbers:
+        sql1 = f"SELECT name from country JOIN session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {airportnumbers[i]} "
+        sql2 = f"SELECT count(ownership) from player_property join session_airp_count join country on iso_country = country_id where session_airp_count.session_id = player_property.session_id and session_airp_count.board_id = {airportnumbers[i]} and ownership != 'NULL' and ownership != 'bank'"
+        cursor = connection.cursor()
+        cursor.execute(sql1)
+        result1 = cursor.fetchall()
+        if cursor.rowcount > 0:
+            for row in result1:
+                name = row[0]
+                country_names.append(name)
+        cursor = connection.cursor()
+        cursor.execute(sql2)
+        result2 = cursor.fetchall()
+        if cursor.rowcount > 0:
+            for row in result2:
+                a_name = row[0]
+                airport_numbers.append(a_name)
+        i += 1
+    return (country_names, airport_numbers)
 
 def get_airport_name(position):
     sql = f"select name from airport join session_airp_count on ident = airport_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
@@ -195,7 +219,7 @@ def get_all_owned_airport(session_id):
             airport_number = row[0]
     return airport_number
 
-def get_upgraded_airport_number(username):
+def get_upgraded_airport_number(session_id):
     sql = f"select COUNT(ownership) from player_property where session_id = {session_id} and upgrade_status > 0"
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -233,14 +257,12 @@ def check_jail_card(session_id):
     return card_number
 
 def modify_money(temp_money):
-    global username
     update = f"update game_sessions set money = {temp_money} where session_id = {session_id}"
     cursor = connection.cursor()
     cursor.execute(update)
     get_money(session_id)
 
 def modify_owner_to_user(position):
-    global username
     update = (f"update player_property set ownership = '{username}' where board_id = {position} and session_id = {session_id}")
     cursor = connection.cursor()
     cursor.execute(update)
@@ -251,7 +273,6 @@ def cheat_owner_to_user(username):
     cursor.execute(update)
 
 def modify_owner_to_bank(position):
-    global username
     update = (f"update player_property set ownership = 'bank' where id = {position} and session_id = {session_id}")
     cursor = connection.cursor()
     cursor.execute(update)
@@ -347,12 +368,11 @@ def jail_event(): # iida
             print("nuh uh")
 
 def salary(): # iida
-    global username
     money = get_money(session_id)
     temp_money = money
-    temp_money += 200 + 1 #property values
+    temp_money += 200 #property values
     modify_money(temp_money)
-    print(f'{col.BOLD}{col.BLUE}Salary time!\nYou earned:', f'{temp_money - money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
+    print(f'{col.BOLD}{col.BLUE}You passed Go cell. Salary time!\nYou earned:', f'{temp_money - money:.0f}','\nYou now have:', f'{temp_money:.0f}', f'{col.END}')
 
 def buy_airport(position): #yutong
     temp_price = get_airport_price(position)
@@ -432,7 +452,6 @@ def upgrade_airport(position): # roberto
 
 
 def price_to_upgrade(position):
-    global username
     get_upgrade_status(position)
     temp_price = get_airport_price(position)
     if upgrade_level == 0:
@@ -467,7 +486,7 @@ def chance_card(position): # yutong
         print(f'You picked card: Bank pays you 50! You will get $50 from the bank.Congratulations. You now have ${temp_money}.')
         modify_money(temp_money)
     elif card_id == 5:
-        punishment = get_all_owned_airport(username) * 25 + get_upgraded_airport_number(username) * 50
+        punishment = get_all_owned_airport(session_id) * 25 + get_upgraded_airport_number(session_id) * 50
         temp_money = temp_money - punishment
         print(f'You picked card: Pay repair fee for all properties. You need to pay $25 for all airports you own, $50 for all the upgraded airports you own. You need to pay in toal ${punishment}. You now have ${temp_money}. ')
         modify_money(temp_money)
@@ -514,8 +533,8 @@ while rounds <= 20:
         print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
         clear_tables(session_id)
         break
-    print('\n' + f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
-    print('\n' + f'{col.BOLD}{col.PINK}Round: {rounds}{col.END}' + '\n')
+    print(f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
+    print(f'{col.BOLD}{col.PINK}Round: {rounds}{col.END}')
     if jail_counter >= 3:
         jailed = False
         jail_counter = 0
@@ -542,10 +561,10 @@ while rounds <= 20:
             elif command == "jail":
                 jailed = True
             elif command == "own_all":
-                cheat_owner_to_user(username)
+                cheat_owner_to_user(session_id)
             elif command == "almighty":
                 modify_money(1000000)
-                cheat_owner_to_user(username)
+                cheat_owner_to_user(session_id)
         print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
             doubles += 1
@@ -561,7 +580,15 @@ while rounds <= 20:
             salary()
             rounds += 1
             position = position - 21
-        print('You are at:', position)
+        print('You are at cell number:', position)
+        country_list, airport_number = get_all_country_name_and_number(session_id)
+        print(f'{col.BOLD}{col.CYAN}Your current money: ${money}{col.END}')
+        print(f'{col.BOLD}{col.CYAN}Your current properties: {col.END}')
+        print(f'{col.BOLD}Country      | Number of airports owned{col.END}')
+        print(f'{country_list[0]}      | {airport_number[0]}')
+        print(f'{country_list[1]}      | {airport_number[1]}')
+        print(f'{country_list[2]}      | {airport_number[2]}')
+        print(f'{country_list[3]}      | {airport_number[3]}' + '\n')
         temp_type_id = get_type_id(position)
         temp_money = get_money(session_id)
         #Non-airport cells
@@ -608,14 +635,15 @@ while rounds <= 20:
             else:
                 if temp_money > airport_price:
                     print(f'{airport_name} is available for purchase. The price is ${airport_price}. Do you want to buy it? (Y/N)')
-                    userinput = input()
-                    print(userinput)
-                    if userinput == 'Y' or 'y':
+                    userinput = input().upper()
+                    if userinput == 'Y':
                         buy_airport(position)
                         temp_money = get_money(session_id)
                         print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. You currently have ${temp_money} after purchase. Game continues. ')
-                    elif userinput == 'N' or 'n':
+                    elif userinput == 'N':
                         print("You choose to pass this airport without buying. Game continue.")
+                    else:
+                        print("Invalid input. Game continues.")
                 else:
                     print("You can't afford this airport yet. You will continue the game.")
 
