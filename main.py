@@ -121,7 +121,7 @@ def clear_tables(session_id):
     cursor = connection.cursor()
     cursor.execute(sql1)
     cursor.execute(sql2)
-    print(f"Successfully deleted session:{session_id} related redundant tables.")
+    print(f"{col.GREEN}Successfully deleted session:{session_id} related redundant tables.{col.END}")
 
 def get_country_name(position):
     sql = f"select name from country join session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {session_id} and session_airp_count.board_id = {position};"
@@ -334,13 +334,15 @@ def jail_event(): # iida
         rounds += 1
         if dice_roll_1 != dice_roll_2:
             jail_counter += 1
+            print(f'{col.BOLD}Failed to roll a double. Still in jail.', f'{col.END}')
         else:
             print(f'{col.BOLD}{col.GREEN}{col.UNDERLINE}You have been released.' + f'{col.END}')
             jailed = False
             jail_counter = 0
     elif choice == '2':
         money -= 200
-        print(f'{col.BOLD}{col.UNDERLINE} You have spent 200 to be released, you currently have ${money} left.', f'{col.END}')
+        modify_money(money)
+        print(f'{col.BOLD}{col.GREEN} You have spent 200 to be released, you currently have ${money} left.', f'{col.END}')
         jailed = False
         jail_counter = 0
     else:
@@ -409,9 +411,6 @@ def get_sell_price(position):
         temp_money = (get_airport_price(position) * 0.5 * 0.5)
         #print(f'Selling this level will get you ${temp_money}')
     return(temp_money)
-
-
-
 
 def upgrade_airport(position): # roberto
     #   get_airport_price(position)
@@ -509,11 +508,9 @@ def board_location(position): # iida
 while rounds <= 20:
     money = get_money(session_id)
     if money <= 0:
-        print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
+        print(f'{col.BOLD}{col.RED}You are bankrupt 💸!  \nGAME OVER' , f'{col.END}☠️')
         clear_tables(session_id)
         break
-    print(f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
-    print(f'{col.BOLD}{col.PINK}Round: {rounds}{col.END}')
     if jail_counter >= 3:
         jailed = False
         jail_counter = 0
@@ -521,12 +518,27 @@ while rounds <= 20:
         jail_event()
         money = get_money(session_id)
         if money <= 0:
-            print(f'{col.BOLD}{col.RED}You are bankrupt! \nGAME OVER', f'{col.END}')
+            print(f'{col.BOLD}{col.RED}You are bankrupt 💸!  \nGAME OVER', f'{col.END}')
             break
+    print(f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
+    print(f'{col.BOLD}{col.PINK}Round: {rounds} | Position: {position}{col.END}')
     if not jailed:
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
-        devcheat = input(f'{col.BOLD}Roll the dice to move. Press any key to roll. {col.END}')
+        country_list, airport_number = get_all_country_name_and_number(session_id)
+        length = len(country_list)
+        print(f'{col.CYAN}---------Player Property---------{col.END}')
+        print(f'{col.BOLD}Your current money💰: {col.CYAN}${money}{col.END}')
+        if length == 0:
+            print(f"{col.BOLD}You don't own any property 🛬 yet. {col.END}")
+            print(f'{col.CYAN}--------------------------------{col.END}')
+        else:
+            print(f'{col.BOLD}Your current properties: {col.END}')
+            print(f'{col.BOLD}Country      | Number of airports 🛬 owned{col.END}')
+            for i in range(length):
+                print(f'{col.CYAN}{country_list[i]}      | {airport_number[i]}{col.END}')
+            print(f'{col.CYAN}--------------------------------{col.END}')
+        devcheat = input(f'{col.BOLD}Roll the dice 🎲 to move. Press any key to roll. {col.END}')
         if devcheat == "developer privileges":
             print("Developer mode activated")
             cheating = True
@@ -544,32 +556,23 @@ while rounds <= 20:
             elif command == "almighty":
                 modify_money(1000000)
                 cheat_owner_to_user(session_id)
-        print(f'{col.BLUE}You rolled{col.END}:',f'{dice_roll_1}, {dice_roll_2}')
         if dice_roll_1 == dice_roll_2:
             doubles += 1
             if doubles >= 2:
-                print(f'{col.BOLD}{col.RED}You have been jailed for rolling doubles twice.{col.END}')
+                print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}')
+                print(f'{col.BOLD}{col.RED}You have been jailed 🧱 for rolling doubles twice.{col.END}')
                 jailed = True
                 doubles = 0
             else:
                 position += dice_roll_1 + dice_roll_2
+                print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
         else:
             position += dice_roll_1 + dice_roll_2
+            print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
         if position > 22:
             salary()
             rounds += 1
             position = position - 21
-        print('You are at cell number:', position)
-        country_list, airport_number = get_all_country_name_and_number(session_id)
-        length = len(country_list)
-        print(f'{col.BOLD}{col.CYAN}Your current money: ${money}{col.END}')
-        if length == 0:
-            print(f"{col.BOLD}{col.CYAN}You don't own any property yet. {col.END}")
-        else:
-            print(f'{col.BOLD}{col.CYAN}Your current properties: {col.END}')
-            print(f'{col.BOLD}Country      | Number of airports owned{col.END}')
-            for i in range(length):
-                print(f'{country_list[i]}      | {airport_number[i]}')
         temp_type_id = get_type_id(position)
         temp_money = get_money(session_id)
         #Non-airport cells
@@ -587,7 +590,7 @@ while rounds <= 20:
             airport_price = get_airport_price(position)
             country_name = get_country_name(position)
             airport_name = get_airport_name(position)
-            input(f'You have landed on {col.BOLD}{col.CYAN}{airport_name}{col.END} from {col.BOLD}{col.CYAN}{country_name}{col.END}. The airport price is ${airport_price}. Press any key to continue.')
+            input(f'You have landed on {col.BOLD}{col.CYAN}{airport_name}{col.END} from {col.BOLD}{col.CYAN}{country_name}{col.END}. The airport price is {col.CYAN}${airport_price}{col.END}. Press any key to continue.')
             owner = check_airport_owner(position)
             #first check the owner of the airport
             if owner == username:
@@ -612,10 +615,10 @@ while rounds <= 20:
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
                 modify_money(temp_money)
-                print(f'Bank owns {airport_name} and you need to pay rent to the bank at price of {rent}. You currently have {temp_money} after paying the rent. {col.END}')
+                print(f'Bank owns {col.CYAN}{airport_name}{col.END}and you need to pay rent to the bank at price of {col.CYAN}${rent}{col.END}. You currently have {temp_money} after paying the rent.')
             else:
                 if temp_money > airport_price:
-                    print(f'{airport_name} is available for purchase. The price is ${airport_price}. Do you want to buy it? (Y/N)')
+                    print(f'{airport_name} is available for purchase. Do you want to buy it? (Y/N)')
                     userinput = input().upper()
                     if userinput == 'Y':
                         buy_airport(position)
