@@ -23,4 +23,3 @@ sql = (f"SELECT UNIQUE COUNT(p.board_id) AS airport_count FROM player_property p
        f"AND p.ownership = 'robi' "
        f"GROUP BY sa.country_id;")
 result = run(sql)
-print(result)

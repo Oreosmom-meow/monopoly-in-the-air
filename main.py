@@ -122,7 +122,6 @@ def check_owns_all_of_country(position):
         return True
     else:
         return False
-    print(result[0][0])
 
 #-------- starting of Yutong's code
 def clear_tables(session_id):
