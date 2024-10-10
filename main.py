@@ -603,7 +603,7 @@ while rounds <= 20:
             doubles += 1
             if doubles >= 2:
                 print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}')
-                print(f'{col.BOLD}{col.RED}You have been jailed 🧱 for rolling doubles twice.{col.END}')
+                print(f'{col.BOLD}{col.RED}You have been jailed 🧱 for rolling doubles twice in a row.{col.END}')
                 jailed = True
                 doubles = 0
             else:
@@ -612,6 +612,7 @@ while rounds <= 20:
         elif dice_roll_1 != dice_roll_2:
             position += dice_roll_1 + dice_roll_2
             print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
+            doubles = 0
         else:
             break
         if position > 22:
