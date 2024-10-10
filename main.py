@@ -105,7 +105,7 @@ def set_player_property(session_id):
 set_player_property(session_id)
 
 def check_owns_all_of_country(position):
-    sql = f'select count(iso_country) from airport join session_airp_count on iso_country = country_id where session_airp_count.board_id = {position}; '
+    sql = f"SELECT COUNT(p.board_id) AS airport_count FROM player_property p JOIN session_airp_count sa ON p.board_id = sa.board_id AND p.session_id = sa.session_id WHERE p.session_id = {session_id}  AND p.ownership = '{username}' GROUP BY sa.country_id;"
     cursor = connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -113,6 +113,7 @@ def check_owns_all_of_country(position):
         return True
     else:
         return False
+    print(result[0][0])
 
 #-------- starting of Yutong's code
 def clear_tables(session_id):
@@ -593,21 +594,30 @@ while rounds <= 20:
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
-                if upgrade_level == 3:
-                    print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
-                elif upgrade_level == 2:
-                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
-                elif upgrade_level == 1:
-                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
-                elif upgrade_level == 0:
-                    print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell airport is ${get_sell_price(position)}')
-                user_choice = input(f'Enter your choice: "s" for sell, "u" for upgrade, Enter to skip: ')
-                if user_choice.lower() == "u":
-                    upgrade_airport(position)
-                elif user_choice.lower() == "s":
-                    sell_airport(position)
-                else:
-                    pass
+                print(upgrade_choice,'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+                if upgrade_choice == True:
+                    if upgrade_level == 3:
+                        print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
+                    elif upgrade_level == 2:
+                        print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
+                    elif upgrade_level == 1:
+                        print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell this level is ${get_sell_price(position)}')
+                    elif upgrade_level == 0:
+                        print(f'This airport is at level {upgrade_level}, the price to upgrade is ${price_to_upgrade(position)} ,The price to sell airport is ${get_sell_price(position)}')
+                    user_choice = input(f'Enter your choice: "s" for sell, "u" for upgrade, Enter to skip: ')
+                    if user_choice.lower() == "u":
+                        upgrade_airport(position)
+                    elif user_choice.lower() == "s":
+                        sell_airport(position)
+                elif upgrade_choice == False:
+                    print(f'The price to sell this level is ${get_sell_price(position)}')
+
+                    user_choice = input(f'Enter your choice: "s" for sell, Enter to skip: ')
+                    if user_choice.lower() == "s":
+                        sell_airport(position)
+                    else:
+                        pass
+
             elif owner == 'bank':
                 rent = airport_price * 0.5
                 temp_money = temp_money - rent
