@@ -500,6 +500,7 @@ def chance_card(position): # yutong
     elif card_id == 3:
         print(f'You picked card: Go to jail. You will be moved to jail immediately.')
         jail_event()
+        position = 17
     elif card_id == 4:
         temp_money = temp_money + 50
         print(f'You picked card: Bank pays you 50! You will get $50 from the bank, congratulations!')
@@ -529,6 +530,7 @@ def chance_card(position): # yutong
         temp_money = get_money(session_id) - 50
         print(f'You picked card: Elected as chairman of the board. You need to pay $50 to the bank.')
         modify_money(temp_money)
+    return position
 
 def board_location(position): # iida
     sql = f'select * from board where id = "{position}"'
@@ -571,11 +573,17 @@ while rounds <= 20:
             print(f'{col.CYAN}--------------------------------{col.END}')
         else:
             print(f'{col.BOLD}🛬Properties: {col.END}')
-            print(f'{col.BOLD}Country      | Number of airports 🛬 owned{col.END}')
+            max_country_length = max(len(country) for country in country_list) + 2
+            print(f'{col.BOLD}{"Country":<{max_country_length}} | Number of airports 🛬 owned{col.END}')
             for i in range(length):
-                print(f'{col.CYAN}{country_list[i]}      | {airport_number[i]}{col.END}')
+                print(f'{col.CYAN}{country_list[i]:<{max_country_length}} | {airport_number[i]}{col.END}')
             print(f'{col.CYAN}--------------------------------{col.END}')
         devcheat = input(f'{col.BOLD}Roll the dice 🎲 to move. Press any key to roll. {col.END}')
+
+        dice_roll_1 = dice_roll()
+        dice_roll_2 = dice_roll()
+        position += dice_roll_1 + dice_roll_2
+
         if devcheat == "developer privileges":
             print("Developer mode activated")
             cheating = True
@@ -598,10 +606,9 @@ while rounds <= 20:
                 modify_money(temp_money)
                 rounds = 22
                 break
+            elif command == 'position':
+                position = int(input())
 
-        dice_roll_1 = dice_roll()
-        dice_roll_2 = dice_roll()
-        position += dice_roll_1 + dice_roll_2
         if position > 22:
             salary()
             rounds += 1
@@ -728,8 +735,9 @@ if rounds > 20:
     elif session_id not in session_list:
         print(f"You didn't make it to the top 5 high scores.")
     index = 0
-    print(f'{col.PINK}USER  | {col.END}', f'{col.PINK}SCORE{col.END}')
+    name_length = max(len(name) for name in top_player) + 2
+    print(f'{col.PINK}{"USER":<{name_length}}| {col.END}', f'{col.PINK}SCORE{col.END}')
     while index < len(top_score):
-        print(f'{top_player[index]}    |  {top_score[index]}')
+        print(f'{top_player[index]:<{name_length}}|  {top_score[index]}')
         index += 1
     clear_tables(session_id)
