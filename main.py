@@ -3,7 +3,6 @@ import random
 import mysql.connector
 from mysql.connector import cursor
 import time
-import threading
 import testing
 connectionstart = time.time()
 # mysql connection
@@ -98,6 +97,7 @@ def set_player_property(session_id):
     cursor = connection.cursor()
     cursor.execute(select_country)
     country_result = cursor.fetchall()
+    print(country_result)
     for row in country_result:
         update_bank = f"update player_property set ownership = 'bank' where board_id = {row[0]} and session_id = {session_id};"
         cursor = connection.cursor()
@@ -360,9 +360,9 @@ def jail_event(): # iida
             choosing = False
     if choice == '1':
         print(f'Dice result: {dice_roll_1}, {dice_roll_2}')
+        rounds += 1
         if dice_roll_1 != dice_roll_2 and jail_counter < 2:
             jail_counter += 1
-            rounds += 1
             print(f'{col.BOLD}{col.RED}Failed to roll a double. Still in jail.', f'{col.END}')
         elif dice_roll_1 != dice_roll_2 and jail_counter >= 2:
             print(f'{col.GREEN}You have been automatically released after 3 attempts. Game continues.{col.END}')
@@ -587,10 +587,10 @@ while rounds <= 20:
             elif command == "jail":
                 jailed = True
             elif command == "own_all":
-                cheat_owner_to_user(session_id)
+                cheat_owner_to_user(username)
             elif command == "almighty":
                 modify_money(1000000)
-                cheat_owner_to_user(session_id)
+                cheat_owner_to_user(username)
             elif command == 'end with money':
                 temp_money = random.randint(500,50000)
                 modify_money(temp_money)
@@ -641,6 +641,7 @@ while rounds <= 20:
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
+                print(upgrade_choice)
                 if upgrade_choice == True:
                     if upgrade_level == 3:
                         print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
@@ -683,7 +684,7 @@ while rounds <= 20:
                         print("Invalid input. Game continues.")
                 else:
                     print("You can't afford this airport yet. You will continue the game.")
-
+        # Non-airport cells
         elif temp_type_id == 2 and jailed == False:
             print(f'You have landed on chance cell. You will randomly select a card from the deck. Press any key to continue.')
             userinput = input()
