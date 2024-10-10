@@ -201,8 +201,8 @@ def get_type_id(position):
     result = cursor.fetchall()
     if cursor.rowcount > 0:
         for row in result:
-            type_id = row[0]
-    return type_id
+            id = row[0]
+    return id
 
 def get_all_owned_airport(session_id):
     sql = f"select COUNT(ownership) from player_property where session_id = {session_id} and ownership = '{username}';"
@@ -542,7 +542,8 @@ def board_location(position): # iida
 while rounds <= 20:
     money = get_money(session_id)
     if money <= 0:
-        print(f'{col.BOLD}{col.RED}You are bankrupt 💸!  \nGAME OVER' , f'{col.END}☠️')
+        print(f'😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵')
+        print(f'{col.BOLD}{col.RED}You are bankrupt 💸!  \nGAME OVER' , f'{col.END}️')
         clear_tables(session_id)
         break
     if jail_counter >= 3:
@@ -552,7 +553,9 @@ while rounds <= 20:
         jail_event()
         money = get_money(session_id)
         if money <= 0:
+            print(f'😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵😵')
             print(f'{col.BOLD}{col.RED}You are bankrupt 💸!  \nGAME OVER', f'{col.END}')
+            clear_tables(session_id)
             break
     print(f'{col.BOLD}{col.PINK}━━━━━━━━━━━━━━━━━━━━━{col.END}' + '\n')
     print(f'{col.BOLD}{col.PINK}Round: {rounds} | Position: {position}{col.END}')
@@ -594,9 +597,15 @@ while rounds <= 20:
                 temp_money = random.randint(500,50000)
                 modify_money(temp_money)
                 rounds = 22
+                break
 
         dice_roll_1 = dice_roll()
         dice_roll_2 = dice_roll()
+        position += dice_roll_1 + dice_roll_2
+        if position > 22:
+            salary()
+            rounds += 1
+            position = position - 21
         if dice_roll_1 == dice_roll_2:
             doubles += 1
             if doubles >= 2:
@@ -605,18 +614,12 @@ while rounds <= 20:
                 jailed = True
                 doubles = 0
             else:
-                position += dice_roll_1 + dice_roll_2
-                print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
+                print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| {col.PINK}You moved to cell number:', f'{position}{col.END}')
         elif dice_roll_1 != dice_roll_2:
-            position += dice_roll_1 + dice_roll_2
-            print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| You moved to cell number:', f'{position}')
+            print(f'You rolled 🎲:', f'{dice_roll_1}, {dice_roll_2}', f'| {col.PINK}You moved to cell number:', f'{position}{col.END}')
             doubles = 0
         else:
             break
-        if position > 22:
-            salary()
-            rounds += 1
-            position = position - 21
         temp_type_id = get_type_id(position)
         temp_money = get_money(session_id)
         #Non-airport cells
@@ -640,7 +643,7 @@ while rounds <= 20:
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
-                print(upgrade_choice)
+                #print(upgrade_choice)
                 if upgrade_choice == True:
                     if upgrade_level == 3:
                         print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
@@ -657,7 +660,6 @@ while rounds <= 20:
                         sell_airport(position)
                 elif upgrade_choice == False:
                     print(f'The price to sell this level is ${get_sell_price(position)}')
-
                     user_choice = input(f'Enter your choice: "s" for sell, Enter to skip: ')
                     if user_choice.lower() == "s":
                         sell_airport(position)
@@ -709,6 +711,7 @@ while rounds <= 20:
 
 
 if rounds > 20:
+    print(f'👑👑👑👑👑👑👑👑👑👑👑👑👑👑👑👑👑')
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
     print(f'{col.BOLD}{col.CYAN}You ended the game with:', f'${get_money(session_id):.0f}')
     print(f"You finished the game in {round(time.time() - gamestart)} seconds")
