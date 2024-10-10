@@ -111,11 +111,12 @@ def check_owns_all_of_country(position):
                              f"WHERE board_id = {position} "
                              f"AND session_id = {session_id};")[0][0]
 
-    sql = (f"SELECT COUNT(s.board_id) FROM session_airp_count s "
-           f"LEFT JOIN player_property p ON p.board_id = s.board_id "
+    sql = (f"SELECT COUNT(p.board_id) FROM  player_property p "
+           f"LEFT JOIN session_airp_count s ON p.board_id = s.board_id "
            f"WHERE s.session_id = {session_id} " 
            f"AND p.ownership = '{username}' "
-           f"AND s.country_id = '{country_id}';")
+           f"AND s.country_id = '{country_id}'"
+           f"AND p.session_id = {session_id};")
     result = testing.run(sql)
     if result[0][0] == 3:
         return True
@@ -330,7 +331,7 @@ def luxury_tax(): # iida
     temp_money = money
     money -= round(100 + money * 0.5)
     modify_money(money)
-    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid ${temp_money - money} in taxs.\n', f'{col.END}')
+    print(f'{col.BOLD}{col.YELLOW}Luxury tax!', f'You paid ${temp_money - money} in taxes.\n', f'{col.END}')
 
 def jail_event(): # iida
     global jail_counter
@@ -352,7 +353,7 @@ def jail_event(): # iida
     print(f'{col.BOLD}{col.YELLOW}Type "3" to use a get out of jail free card to get out.', f'{col.END}')
     while choosing == True:
         choice = input('Enter your choice: ')
-        if choice != '1' or choice != '2' or choice != '3':
+        if choice != '1' and choice != '2' and choice != '3':
             print('Try again, use "1", "2", or "3" to choose.')
         elif 1 > int(choice) < 3:
             print('Try again, use "1", "2", or "3" to choose.')
