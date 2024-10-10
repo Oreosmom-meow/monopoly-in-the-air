@@ -4,7 +4,7 @@ import mysql.connector
 from mysql.connector import cursor
 import time
 import threading
-
+import testing
 connectionstart = time.time()
 # mysql connection
 connection = mysql.connector.connect(
@@ -106,10 +106,17 @@ def set_player_property(session_id):
 set_player_property(session_id)
 
 def check_owns_all_of_country(position):
-    sql = f"SELECT COUNT(p.board_id) AS airport_count FROM player_property p JOIN session_airp_count sa ON p.board_id = sa.board_id AND p.session_id = sa.session_id WHERE p.session_id = {session_id}  AND p.ownership = '{username}' GROUP BY sa.country_id;"
-    cursor = connection.cursor()
-    cursor.execute(sql)
-    result = cursor.fetchall()
+
+    country_id = testing.run(f"SELECT country_id FROM session_airp_count "
+                             f"WHERE board_id = {position} "
+                             f"AND session_id = {session_id};")[0][0]
+
+    sql = (f"SELECT COUNT(s.board_id) FROM session_airp_count s "
+           f"LEFT JOIN player_property p ON p.board_id = s.board_id "
+           f"WHERE s.session_id = {session_id} " 
+           f"AND p.ownership = '{username}' "
+           f"AND s.country_id = '{country_id}';")
+    result = testing.run(sql)
     if result[0][0] == 3:
         return True
     else:
@@ -345,7 +352,7 @@ def jail_event(): # iida
     print(f'{col.BOLD}{col.YELLOW}Type "3" to use a get out of jail free card to get out.', f'{col.END}')
     while choosing == True:
         choice = input('Enter your choice: ')
-        if choice == '':
+        if choice != '1' or choice != '2' or choice != '3':
             print('Try again, use "1", "2", or "3" to choose.')
         elif 1 > int(choice) < 3:
             print('Try again, use "1", "2", or "3" to choose.')
@@ -697,6 +704,8 @@ while rounds <= 20:
             userinput = input()
             if userinput == '':
                 luxury_tax()
+
+
 
 if rounds > 20:
     print(f'{col.BOLD}{col.PINK}You have won!{col.END}')
