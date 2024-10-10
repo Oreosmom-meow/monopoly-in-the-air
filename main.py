@@ -503,7 +503,7 @@ def chance_card(position): # yutong
         jail_event()
     elif card_id == 4:
         temp_money = temp_money + 50
-        print(f'You picked card: Bank pays you 50! You will get $50 from the bank.Congratulations.')
+        print(f'You picked card: Bank pays you 50! You will get $50 from the bank, congratulations!')
         modify_money(temp_money)
     elif card_id == 5:
         punishment = get_all_owned_airport(session_id) * 25 + get_upgraded_airport_number(session_id) * 50
@@ -640,7 +640,6 @@ while rounds <= 20:
             if owner == username:
                 upgrade_level = get_upgrade_status(position)
                 upgrade_choice = check_owns_all_of_country(position)
-                print(upgrade_choice,'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
                 if upgrade_choice == True:
                     if upgrade_level == 3:
                         print(f'This airport is at level {upgrade_level} - you can not upgrade further ,The price to sell this level is ${get_sell_price(position)}')
