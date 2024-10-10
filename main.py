@@ -368,6 +368,7 @@ def jail_event(): # iida
         elif dice_roll_1 != dice_roll_2 and jail_counter >= 2:
             print(f'{col.GREEN}You have been automatically released after 3 attempts. Game continues.{col.END}')
             jailed = False
+            jail_counter = 0
         elif dice_roll_1 == dice_roll_2:
             print(f'{col.BOLD}{col.GREEN}You have been released.' + f'{col.END}')
             jailed = False
