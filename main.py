@@ -97,7 +97,6 @@ def set_player_property(session_id):
     cursor = connection.cursor()
     cursor.execute(select_country)
     country_result = cursor.fetchall()
-    print(country_result)
     for row in country_result:
         update_bank = f"update player_property set ownership = 'bank' where board_id = {row[0]} and session_id = {session_id};"
         cursor = connection.cursor()
