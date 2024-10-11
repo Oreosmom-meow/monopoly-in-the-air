@@ -3,7 +3,6 @@ import random
 import mysql.connector
 from mysql.connector import cursor
 import time
-import testing
 connectionstart = time.time()
 # mysql connection
 connection = mysql.connector.connect(
@@ -105,18 +104,24 @@ def set_player_property(session_id):
 set_player_property(session_id)
 
 def check_owns_all_of_country(position):
-
-    country_id = testing.run(f"SELECT country_id FROM session_airp_count "
+    sql1 = (f"SELECT country_id FROM session_airp_count "
                              f"WHERE board_id = {position} "
-                             f"AND session_id = {session_id};")[0][0]
-
-    sql = (f"SELECT COUNT(p.board_id) FROM  player_property p "
+                             f"AND session_id = {session_id};")
+    cursor = connection.cursor()
+    cursor.execute(sql1)
+    result = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for row in result:
+            country_id = row[0]
+    sql2 = (f"SELECT COUNT(p.board_id) FROM  player_property p "
            f"LEFT JOIN session_airp_count s ON p.board_id = s.board_id "
            f"WHERE s.session_id = {session_id} " 
            f"AND p.ownership = '{username}' "
            f"AND s.country_id = '{country_id}'"
            f"AND p.session_id = {session_id};")
-    result = testing.run(sql)
+    cursor = connection.cursor()
+    cursor.execute(sql2)
+    result = cursor.fetchall()
     if result[0][0] == 3:
         return True
     else:
