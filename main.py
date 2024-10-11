@@ -686,7 +686,7 @@ while rounds <= 20:
                         buy_airport(position)
                         temp_money = get_money(session_id)
                         print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. Game continues. ')
-                    elif userinput == 'N' or 'n':
+                    elif userinput == 'N':
                         print("You choose to pass this airport without buying. Game continue.")
                     else:
                         print("Invalid input. Game continues.")
