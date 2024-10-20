@@ -388,7 +388,7 @@ def airport_cell(status):
             if userinput == 'Y':
                 buy_airport(status)
                 temp_money = SQL_functions.get_money(status.session_id)
-                SQL_functions.modify_money(temp_money, status.position)
+                SQL_functions.modify_money(temp_money, status.session_id)
                 print(f'You purchased {airport_name} from {country_name} at price of ${airport_price}. Game continues. ')
             elif userinput == 'N':
                 print("You choose to pass this airport without buying. Game continue.")
