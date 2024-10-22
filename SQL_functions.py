@@ -30,7 +30,7 @@ def set_board_airports(session_id):
         cursor.execute(airport_sql)
         airport_result = cursor.fetchall()
         for airport in airport_result:
-            sql = f'INSERT INTO session_airp_count (airport_id, country_id, session_id, board_id) VALUES ("{airport[0]}", "{row[0]}", {session_id}, {airportnumbers[i]});'
+            sql = f'INSERT INTO player_property (airport_id, country_id, session_id, board_id) VALUES ("{airport[0]}", "{row[0]}", {session_id}, {airportnumbers[i]});'
             cursor = connector.connection.cursor()
             cursor.execute(sql)
             i += 1
@@ -48,7 +48,7 @@ def set_player_property(session_id):
         cursor.execute(insert)
         i += 1
     random_airport = random.choice(airportnumbers)
-    select_country = f"select board_id from session_airp_count where country_id in (select country_id from session_airp_count where board_id = {random_airport}) and session_id = {session_id};"
+    select_country = f"select board_id from player_property where country_id in (select country_id from player_property where board_id = {random_airport}) and session_id = {session_id};"
     cursor = connector.connection.cursor()
     cursor.execute(select_country)
     country_result = cursor.fetchall()
@@ -59,7 +59,7 @@ def set_player_property(session_id):
     return
 
 def check_owns_all_of_country(status) :
-    sql1 = (f"SELECT country_id FROM session_airp_count "
+    sql1 = (f"SELECT country_id FROM player_property "
                              f"WHERE board_id = {status.position} "
                              f"AND session_id = {status.session_id};")
     cursor = connector.connection.cursor()
@@ -69,7 +69,7 @@ def check_owns_all_of_country(status) :
         for row in result:
             country_id = row[0]
     sql2 = (f"SELECT COUNT(p.board_id) FROM  player_property p "
-           f"LEFT JOIN session_airp_count s ON p.board_id = s.board_id "
+           f"LEFT JOIN player_property s ON p.board_id = s.board_id "
            f"WHERE s.session_id = {status.session_id} " 
            f"AND p.ownership = '{status.username}' "
            f"AND s.country_id = '{country_id}'"
@@ -83,7 +83,7 @@ def check_owns_all_of_country(status) :
         return False
 
 def clear_tables(session_id):
-    sql1 = f"DELETE FROM session_airp_count where session_id = {session_id};"
+    sql1 = f"DELETE FROM player_property where session_id = {session_id};"
     sql2 = f"DELETE FROM player_property where session_id = {session_id};"
     cursor = connector.connection.cursor()
     cursor.execute(sql1)
@@ -91,7 +91,7 @@ def clear_tables(session_id):
     print(f"{colors.col.GREEN}Successfully deleted session:{session_id} related redundant tables.{colors.col.END}")
 
 def get_country_name(status):
-    sql = f"select name from country join session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {status.session_id} and session_airp_count.board_id = {status.position};"
+    sql = f"select name from country join player_property on iso_country = country_id WHERE player_property.session_id = {status.session_id} and player_property.board_id = {status.position};"
     cursor = connector.connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -104,7 +104,7 @@ def get_all_country_name_and_number(status):
     country_names = []
     airport_numbers = []
     tempo_list = []
-    sql2 = f"SELECT sa.country_id, COUNT(p.board_id) AS airport_count FROM player_property p JOIN session_airp_count sa ON p.board_id = sa.board_id AND p.session_id = sa.session_id WHERE p.session_id = {status.session_id}  AND p.ownership = '{status.username}' GROUP BY sa.country_id;"
+    sql2 = f"SELECT sa.country_id, COUNT(p.board_id) AS airport_count FROM player_property p JOIN player_property sa ON p.board_id = sa.board_id AND p.session_id = sa.session_id WHERE p.session_id = {status.session_id}  AND p.ownership = '{status.username}' GROUP BY sa.country_id;"
     cursor = connector.connection.cursor()
     cursor.execute(sql2)
     result2 = cursor.fetchall()
@@ -113,7 +113,7 @@ def get_all_country_name_and_number(status):
             tempo_list.append(key)
             airport_numbers.append(value)
     for x in tempo_list:
-        sql1 = f"SELECT DISTINCT(name) from country JOIN session_airp_count on iso_country = country_id WHERE session_airp_count.session_id = {status.session_id} and session_airp_count.country_id = '{x}'; "
+        sql1 = f"SELECT DISTINCT(name) from country JOIN player_property on iso_country = country_id WHERE player_property.session_id = {status.session_id} and player_property.country_id = '{x}'; "
         cursor = connector.connection.cursor()
         cursor.execute(sql1)
         result1 = cursor.fetchall()
@@ -124,7 +124,7 @@ def get_all_country_name_and_number(status):
     return (country_names, airport_numbers)
 
 def get_airport_name(status):
-    sql = f"select name from airport join session_airp_count on ident = airport_id WHERE session_airp_count.session_id = {status.session_id} and session_airp_count.board_id = {status.position};"
+    sql = f"select name from airport join player_property on ident = airport_id WHERE player_property.session_id = {status.session_id} and player_property.board_id = {status.position};"
     cursor = connector.connection.cursor()
     cursor.execute(sql)
     result = cursor.fetchall()

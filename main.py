@@ -7,6 +7,7 @@ class GameState:
     def __init__(self):
         self.rounds = 1
         self.doubles = 0
+        self.jail_card = 0
         self.jail_counter = 0
         self.jailed = False
         self.username = ''
