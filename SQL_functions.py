@@ -249,6 +249,7 @@ def insert_high_score(session_id, score):
     cursor = connector.connection.cursor()
     cursor.execute(sql)
 
+
 def get_top_high_score():
     session_list = []
     player_name = []
