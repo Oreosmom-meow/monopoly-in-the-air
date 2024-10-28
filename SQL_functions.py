@@ -4,7 +4,7 @@ import colors
 import time
 
 def insert_username(username,gamestart):
-    sql = f"INSERT INTO game_sessions(player_name, money, start_time) VALUES ('{username}', 200, 0, {gamestart});"
+    sql = f"INSERT INTO game_sessions(player_name, money, start_time) VALUES ('{username}', 200, {gamestart});"
     cursor = connector.connection.cursor()
     cursor.execute(sql)
 
@@ -44,7 +44,7 @@ def set_player_property(session_id):
     airportnumbers = (2, 4, 5, 7, 8, 10, 13, 15, 16, 19, 20, 21)
     i = 0
     for x in airportnumbers:
-        insert = f"INSERT INTO player_property (session_id, board_id, ownership, upgrade_status) values ({session_id}, {airportnumbers[i]}, NULL, 0);"
+        insert = f"INSERT IGNORE INTO player_property (session_id, board_id, ownership, upgrade_status) values ({session_id}, {airportnumbers[i]}, NULL, 0);"
         cursor = connector.connection.cursor()
         cursor.execute(insert)
         i += 1

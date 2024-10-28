@@ -52,7 +52,7 @@ def release(status):
     status.jail_counter = 0
 
 def jail_event(status): # iida
-    jailcard = SQL_functions.check_jail_card(status.session_id)
+    #jailcard = SQL_functions.check_jail_card(status.session_id)
     print_in_jail_message(status)
     while status.jailed:
         choice = input('Enter your choice: ')
@@ -88,13 +88,13 @@ def jail_event(status): # iida
                     f'{colors.col.END}')
                 release(status)
             else:
-                if SQL_functions.check_jail_card(status.session_id) > 0:
+                '''if SQL_functions.check_jail_card(status.session_id) > 0:
                     print('bee(the insect) free!')
                     release(status)
                     status.jailcard -= 1
                     SQL_functions.modify_out_of_jail_card(jailcard, status.session_id)
-                else:
-                    print("You don't have jailed card to use")
+                else:'''
+                print("You don't have jailed card to use")
 
 def salary(status): # iida
     money = SQL_functions.get_money(status.session_id)
@@ -201,13 +201,13 @@ def chance_card(status): # yutong
         salary(status)
         status.position = 1
     elif card_id == 2:
-        print(f'You picked card: Get out of jail. You can use it for once when you are in jail.')
-        jail_card = SQL_functions.check_jail_card(status.session_id)
+        print(f'You picked card: Get out of jail. You can use it for once when you are in jail. JUST KIDDING')
+        '''jail_card = SQL_functions.check_jail_card(status.session_id)
         jail_card += 1
-        SQL_functions.modify_out_of_jail_card(jail_card,status.session_id)
+        SQL_functions.modify_out_of_jail_card(jail_card,status.session_id)'''
     elif card_id == 3:
         print(f'You picked card: Go to jail. You will be moved to jail immediately.')
-        jail_event(status)
+        #jail_event(status)
         status.position = 17
     elif card_id == 4:
         temp_money = temp_money + 50
@@ -273,12 +273,12 @@ def print_player_property(status):
     print(f'{colors.col.BOLD}{colors.col.PINK}━━━━━━━━━━━━━━━━━━━━━{colors.col.END}' + '\n')
     print(f'{colors.col.BOLD}{colors.col.PINK}Round: {status.rounds} | Position: {status.position}{colors.col.END}')
     country_list, airport_number = SQL_functions.get_all_country_name_and_number(status)
-    jail_card = SQL_functions.check_jail_card(status.session_id)
+    #jail_card = SQL_functions.check_jail_card(status.session_id)
     length = len(country_list)
     money = SQL_functions.get_money(status.session_id)
     print(f'{colors.col.CYAN}---------Player Property---------{colors.col.END}')
     print(f'{colors.col.BOLD}💰Money: {colors.col.CYAN}${money}{colors.col.END}')
-    print(f'🃏Jail card: {colors.col.CYAN}{jail_card}{colors.col.END}')
+    #print(f'🃏Jail card: {colors.col.CYAN}{jail_card}{colors.col.END}')
     if length == 0:
         print(f"{colors.col.BOLD}🛬Properties:{colors.col.CYAN} 0{colors.col.END} {colors.col.END}")
         print(f'{colors.col.CYAN}--------------------------------{colors.col.END}')
