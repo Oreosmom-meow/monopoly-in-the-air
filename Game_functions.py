@@ -88,13 +88,13 @@ def jail_event(status): # iida
                     f'{colors.col.END}')
                 release(status)
             else:
-                '''if SQL_functions.check_jail_card(status.session_id) > 0:
+                if status.jail_card > 0:
                     print('bee(the insect) free!')
                     release(status)
                     status.jailcard -= 1
                     SQL_functions.modify_out_of_jail_card(jailcard, status.session_id)
-                else:'''
-                print("You don't have jailed card to use")
+                else:
+                    print("You don't have card to use")
 
 def salary(status): # iida
     money = SQL_functions.get_money(status.session_id)
@@ -201,10 +201,8 @@ def chance_card(status): # yutong
         salary(status)
         status.position = 1
     elif card_id == 2:
-        print(f'You picked card: Get out of jail. You can use it for once when you are in jail. JUST KIDDING')
-        '''jail_card = SQL_functions.check_jail_card(status.session_id)
-        jail_card += 1
-        SQL_functions.modify_out_of_jail_card(jail_card,status.session_id)'''
+        print(f'You picked card: Get out of jail. You can use it once when you are in jail.')
+        status.jail_card += 1
     elif card_id == 3:
         print(f'You picked card: Go to jail. You will be moved to jail immediately.')
         #jail_event(status)
